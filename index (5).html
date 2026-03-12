@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parc HME ↔ RZB</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzBkMGQwZCIvPgogIDxjaXJjbGUgY3g9IjEzIiBjeT0iMTMiIHI9IjciIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2U4NjAxYSIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgPGxpbmUgeDE9IjE4LjUiIHkxPSIxOC41IiB4Mj0iMjYiIHkyPSIyNiIgc3Ryb2tlPSIjZjdiNTAwIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4=">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d0d;--surface:#111;--border:#1e1e1e;--border2:#252525;
+  --orange:#e8601a;--yellow:#f7b500;--text:#e8e8e0;--muted:#555;--dim:#333;
+}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh}
+.app{max-width:1000px;margin:0 auto;padding:2rem 1.5rem 4rem}
+.header{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--border);padding-bottom:1.2rem;margin-bottom:2rem}
+.header-title{font-size:1.9rem;font-weight:800;letter-spacing:-0.5px}
+.header-title span{color:var(--orange)}
+.header-sub{font-family:'DM Mono',monospace;font-size:.82rem;color:var(--muted);letter-spacing:.5px}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.8rem}
+.tab{padding:.65rem 1.4rem;font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none}
+.tab.active{color:var(--orange);border-bottom-color:var(--orange)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.search-row{display:flex;gap:10px;margin-bottom:10px}
+.search-input{flex:1;background:#141414;border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:'DM Mono',monospace;font-size:1rem;padding:.7rem 1rem;outline:none;transition:border-color .2s}
+.search-input:focus{border-color:var(--orange);box-shadow:0 0 0 2px rgba(232,96,26,.1)}
+.search-input::placeholder{color:var(--dim)}
+.btn{background:var(--orange);color:#0d0d0d;border:none;border-radius:6px;font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;padding:.7rem 1.6rem;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+.btn:hover{opacity:.85}
+.btn-outline{background:transparent;color:var(--orange);border:1px solid rgba(232,96,26,.45);font-family:'DM Mono',monospace;font-size:.8rem;padding:.45rem 1rem}
+.btn-outline:hover{border-color:var(--orange);background:rgba(232,96,26,.05)}
+.hints{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:1.4rem}
+.hint{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);background:#141414;border:1px solid var(--border2);padding:3px 9px;border-radius:99px}
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.8rem;position:relative;overflow:hidden;margin-bottom:1rem}
+.result-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--orange),var(--yellow))}
+.result-tag{display:inline-block;font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--orange);background:rgba(232,96,26,.08);border:1px solid rgba(232,96,26,.3);padding:3px 10px;border-radius:99px;margin-bottom:12px}
+.result-big{font-family:'DM Mono',monospace;font-size:3rem;font-weight:500;color:var(--yellow);letter-spacing:1px;line-height:1;margin-bottom:1.4rem}
+.result-row{display:flex;gap:12px;margin-bottom:9px;align-items:baseline}
+.result-label{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);min-width:110px;flex-shrink:0}
+.result-value{font-size:.92rem;color:#c8c8c0}
+.result-value.mono{font-family:'DM Mono',monospace;color:var(--text)}
+.result-comment{margin-top:.9rem;padding:.7rem 1rem;background:rgba(255,255,255,.025);border-left:2px solid rgba(232,96,26,.5);border-radius:0 4px 4px 0;font-size:.88rem;color:#888;font-style:italic}
+.serie-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1rem}
+.serie-title{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:1rem}
+.serie-block{margin-bottom:1rem}.serie-block:last-child{margin-bottom:0}
+.serie-block-label{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.serie-block-value{font-family:'DM Mono',monospace;font-size:.88rem;color:var(--text);word-break:break-all}
+.serie-empty{color:var(--dim);font-size:.85rem;font-style:italic}
+.serie-divider{height:1px;background:var(--border);margin:.8rem 0}
+.result-grid{display:grid;grid-template-columns:1fr}
+@media(min-width:640px){.result-grid{grid-template-columns:2fr 1fr;gap:1rem}}
+.no-result{text-align:center;padding:3rem 1rem;color:var(--dim);font-size:1.1rem}
+.no-result em{color:var(--orange);font-style:normal}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px;margin-bottom:1rem}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+thead tr{background:#141414}
+th{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:.7rem 1rem;text-align:left;border-bottom:1px solid var(--border)}
+td{padding:.65rem 1rem;color:#c8c8c0;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:.8rem;cursor:pointer}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(232,96,26,.05);color:var(--text)}
+tbody tr.selected td{background:rgba(232,96,26,.1);color:var(--text)}
+.stats-bar{display:flex;flex-wrap:wrap;gap:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.9rem 1.2rem;margin-bottom:1.4rem;align-items:center}
+.stat{text-align:center}
+.stat-val{font-family:'DM Mono',monospace;font-size:1.2rem;font-weight:500;color:var(--yellow)}
+.stat-val.warn{color:var(--orange)}
+.stat-lbl{font-size:.65rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.stat-sep{color:var(--border);font-size:1.5rem}
+.multi-textarea{width:100%;background:#141414;border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:'DM Mono',monospace;font-size:.88rem;padding:.8rem 1rem;outline:none;resize:vertical;transition:border-color .2s}
+.multi-textarea:focus{border-color:var(--orange)}
+.section-label{font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:.7rem}
+.not-found-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:.8rem}
+.nf-chip{font-family:'DM Mono',monospace;font-size:.75rem;background:rgba(232,96,26,.08);border:1px solid rgba(232,96,26,.3);color:#ffa07a;padding:3px 8px;border-radius:4px}
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
+.modal-backdrop.open{display:flex}
+.modal{background:#161616;border:1px solid var(--border);border-radius:14px;padding:2rem;width:min(500px,95vw);max-height:85vh;overflow-y:auto;position:relative}
+.modal-title{font-size:1rem;font-weight:700;margin-bottom:1.4rem}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;line-height:1}
+.modal-close:hover{color:var(--text)}
+.field{margin-bottom:1rem}
+.field label{display:block;font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.field input,.field textarea{width:100%;background:#0d0d0d;border:1px solid var(--border2);border-radius:5px;color:var(--text);font-family:'DM Mono',monospace;font-size:.88rem;padding:.55rem .8rem;outline:none}
+.field input:focus,.field textarea:focus{border-color:var(--orange)}
+.field textarea{resize:vertical;min-height:70px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.4rem}
+.badge-edit{display:inline-block;font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:1px;background:rgba(232,96,26,.12);color:var(--orange);border:1px solid rgba(232,96,26,.3);padding:2px 7px;border-radius:3px;margin-left:6px;vertical-align:middle}
+.card-agence-badge{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;letter-spacing:.5px;color:#fff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:4px 11px;white-space:nowrap}
+.admin-section{display:flex;flex-direction:column;gap:0}
+.admin-block{padding:1.5rem 0}
+.admin-block-title{font-size:1rem;font-weight:700;margin-bottom:.5rem;color:var(--text)}
+.admin-block-desc{font-size:.85rem;color:#888;margin-bottom:1rem;line-height:1.55}
+.admin-block-desc code{font-family:'DM Mono',monospace;background:#1a1a1a;padding:1px 5px;border-radius:3px;color:var(--orange)}
+.admin-divider{height:1px;background:var(--border)}
+.btn-danger{color:#e05555 !important;border-color:rgba(224,85,85,.4) !important}
+.btn-danger:hover{border-color:#e05555 !important;background:rgba(224,85,85,.05) !important}
+.btn-success{background:var(--yellow);color:#0d0d0d}
+.btn-success:hover{opacity:.85}
+.new-veh-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:1px;background:rgba(247,181,0,.12);color:var(--yellow);border:1px solid rgba(247,181,0,.3);padding:2px 7px;border-radius:3px;margin-left:6px;vertical-align:middle}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:500px){.field-row{grid-template-columns:1fr}}
+.import-preview-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin-top:1rem}
+.import-preview-title{font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:.8rem}
+.import-stat{font-family:'DM Mono',monospace;font-size:.85rem;color:var(--text);margin-bottom:.4rem}
+.import-stat span{color:var(--yellow)};bottom:1.5rem;right:1.5rem;background:#1a1a1a;border:1px solid var(--orange);border-radius:8px;padding:.7rem 1.2rem;font-family:'DM Mono',monospace;font-size:.82rem;color:var(--text);z-index:200;opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-title">Parc <span>HME</span> ↔ RZB</div>
+    <div class="header-sub" id="header-stats">chargement…</div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('search')">Recherche</button>
+    <button class="tab" onclick="switchTab('multi')">Multi-recherche</button>
+    <button class="tab" onclick="switchTab('admin')">⚙ Données</button>
+  </div>
+  <div id="tab-search" class="tab-panel active">
+    <div class="search-row">
+      <input id="search-input" class="search-input" type="text"
+        placeholder="Ex : H01100M · X001L · AB-123-CD · pelle bassin"
+        autocomplete="off" spellcheck="false"
+        onkeydown="if(event.key==='Enter') doSearch()">
+      <button class="btn" onclick="doSearch()">Chercher</button>
+    </div>
+    <div class="hints">
+      <span class="hint">HME → commence par H</span>
+      <span class="hint">RZB → commence par X ou P</span>
+      <span class="hint">Immatriculation</span>
+      <span class="hint">Mots-clés libres</span>
+    </div>
+    <div id="search-results"></div>
+  </div>
+  <div id="tab-multi" class="tab-panel">
+    <div class="section-label">Une entrée par ligne</div>
+    <textarea id="multi-input" class="multi-textarea" rows="8"
+      placeholder="H01100M&#10;X001L&#10;AB-123-CD&#10;pelle bassin"></textarea>
+    <div style="display:flex;gap:8px;margin-top:.8rem;margin-bottom:1.4rem">
+      <button class="btn" onclick="doMulti()">Lancer</button>
+      <button class="btn btn-outline" onclick="exportMultiCSV()">Exporter CSV</button>
+    </div>
+    <div id="multi-results"></div>
+  </div>
+  <div id="tab-admin" class="tab-panel">
+    <div class="admin-section">
+      <div class="admin-block">
+        <div class="admin-block-title">📤 Exporter la base complète</div>
+        <div class="admin-block-desc">Télécharge un CSV avec toutes les fiches (données de base + modifications locales fusionnées). Tu peux l'ouvrir dans Excel, faire tes modifications, puis le réimporter.</div>
+        <button class="btn" onclick="exportFullCSV()">Télécharger CSV complet</button>
+      </div>
+      <div class="admin-divider"></div>
+      <div class="admin-block">
+        <div class="admin-block-title">📥 Importer un CSV modifié</div>
+        <div class="admin-block-desc">Sélectionne le CSV que tu as modifié dans Excel. L'app va générer un nouveau <code>index.html</code> avec les données intégrées — tu n'auras plus qu'à le déposer sur GitHub pour que tout le monde voie les modifications.</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <label class="btn btn-outline" style="cursor:pointer">
+            Choisir le CSV…
+            <input type="file" id="import-csv-input" accept=".csv" style="display:none" onchange="handleImportCSV(this)">
+          </label>
+          <span id="import-filename" style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--muted)"></span>
+        </div>
+        <div id="import-preview"></div>
+      </div>
+      <div class="admin-divider"></div>
+      <div class="admin-block">
+        <div class="admin-block-title">➕ Créer un nouveau véhicule</div>
+        <div class="admin-block-desc">Ajoute une nouvelle fiche directement dans la base locale. La fiche sera visible dans la recherche immédiatement. Pour la rendre permanente (visible par tous), génère un <code>index.html</code> via l'export CSV puis réimportation.</div>
+        <button class="btn btn-success" onclick="openNewVehicule()">+ Nouveau véhicule</button>
+      </div>
+      <div class="admin-divider"></div>
+      <div class="admin-block">
+        <div class="admin-block-title">🗑 Modifications locales</div>
+        <div class="admin-block-desc">Efface toutes les modifications enregistrées dans ce navigateur (localStorage).</div>
+        <button class="btn btn-outline btn-danger" onclick="clearLocalStorage()">Effacer les modifications locales</button>
+        <span id="ls-count" style="font-family:'DM Mono',monospace;font-size:.78rem;color:var(--muted);margin-left:12px"></span>
+      </div>
+    </div>
+  </div><!-- /app -->
+
+<div class="modal-backdrop" id="edit-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Modifier la fiche</div>
+    <div class="field"><label>HME</label><input id="edit-hme" disabled></div>
+    <div class="field"><label>RZB</label><input id="edit-rzb"></div>
+    <div class="field"><label>Libellé</label><input id="edit-libelle"></div>
+    <div class="field"><label>Immatriculation</label><input id="edit-immat"></div>
+    <div class="field"><label>Agence</label><input id="edit-agence"></div>
+    <div class="field"><label>Commentaire</label><textarea id="edit-comment"></textarea></div>
+    <div class="field"><label>N° Série</label><input id="edit-serie"></div>
+    <div class="field"><label>N° Série Grue</label><input id="edit-serie-grue"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+      <button class="btn" onclick="saveEdit()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="new-veh-modal">
+  <div class="modal" style="max-width:560px">
+    <button class="modal-close" onclick="closeNewVehicule()">✕</button>
+    <div class="modal-title">Nouveau véhicule <span class="new-veh-badge">LOCAL</span></div>
+    <div class="field-row">
+      <div class="field">
+        <label>N° HME <span style="color:var(--orange)">*</span></label>
+        <input id="new-hme" placeholder="ex: H05999R" autocomplete="off" spellcheck="false">
+        <div id="new-hme-error" style="font-family:'DM Mono',monospace;font-size:.7rem;color:#e05555;margin-top:4px;display:none"></div>
+      </div>
+      <div class="field">
+        <label>N° RZB</label>
+        <input id="new-rzb" placeholder="ex: H05999R ou X999A" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <div class="field">
+      <label>Libellé <span style="color:var(--orange)">*</span></label>
+      <input id="new-libelle" placeholder="ex: RENAULT CLIO 1.5 DCI 90" autocomplete="off">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Immatriculation</label>
+        <input id="new-immat" placeholder="ex: AB-123-CD" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label>Agence <span style="color:var(--orange)">*</span></label>
+        <input id="new-agence" placeholder="ex: CA BASSIN, EMP…" list="agences-list" autocomplete="off">
+        <datalist id="agences-list"></datalist>
+      </div>
+    </div>
+    <div class="field">
+      <label>Commentaire</label>
+      <textarea id="new-comment" placeholder="Affectation, remarques…" rows="2"></textarea>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>N° Série</label>
+        <input id="new-serie" placeholder="Numéro de série engin" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label>N° Série Grue</label>
+        <input id="new-serie-grue" placeholder="Numéro de série grue" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <div style="margin-top:.6rem;padding:.7rem 1rem;background:rgba(247,181,0,.05);border:1px solid rgba(247,181,0,.2);border-radius:6px;font-family:'DM Mono',monospace;font-size:.73rem;color:#aaa">
+      ⚠ Cette fiche sera enregistrée localement (ce navigateur). Pour la partager, exporte le CSV et génère un nouveau <code style="color:var(--orange)">index.html</code>.
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeNewVehicule()">Annuler</button>
+      <button class="btn btn-success" onclick="saveNewVehicule()">✓ Créer la fiche</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+const BASE_DATA = [{"hme": "H01100M", "rzb": "X001L", "agence": "CA BASSIN", "libelle": "POMPE A RABATTEMENT DE NAPPE", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H01101M", "rzb": "X002L", "agence": "CA BASSIN", "libelle": "POMPE DE LANCAGE", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H01202Z", "rzb": "XC02A", "agence": "CA BASSIN", "libelle": "CONTAINER DISTRIBUTEUR 12SP FUEL", "immat": "", "commentaire": "LA TESTE GO", "serie": "", "serie_grue": ""}, {"hme": "H04001M", "rzb": "P105I", "agence": "CA BASSIN", "libelle": "PELLE HYDRAULIQUE MECALAC", "immat": "", "commentaire": "RACHAT MEC 2018", "serie": "MEC06MCRKJ0 120663", "serie_grue": ""}, {"hme": "H04002K", "rzb": "P009J", "agence": "CA BASSIN", "libelle": "MINI PELLE COMPACTE AVEC BRH - KUBOTA U27  (REMORQUE 19203K)", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H04003K", "rzb": "P010J", "agence": "CA BASSIN", "libelle": "MINI PELLE COMPACTE AVEC BRH -KUBOTA U27 (REMORQUE 19204K)", "immat": "", "commentaire": "RAS", "serie": "SERIE 63983", "serie_grue": ""}, {"hme": "H04007H", "rzb": "P401G", "agence": "CA BASSIN", "libelle": "PELLES S/CHAINES CAT320EL 22,5T", "immat": "", "commentaire": "RAS", "serie": "CAT0320EJNAZ02374", "serie_grue": ""}, {"hme": "H05004N", "rzb": "H05004N", "agence": "CA BASSIN", "libelle": "PEUGEOT 308 SW ALLURE PACK BLUEHDI 130 S/S BVM6", "immat": "GH-320-XR", "commentaire": "BOGAR CHARLY", "serie": "", "serie_grue": ""}, {"hme": "H05005Q", "rzb": "H05005Q", "agence": "CA BASSIN", "libelle": "RENAULT CLIO EVOLUTION E-TECH FULL HYBRID 145", "immat": "GY-725-GS", "commentaire": "LAULAN CLEMENT", "serie": "", "serie_grue": ""}, {"hme": "H05008Q", "rzb": "H05008Q", "agence": "CA BASSIN", "libelle": "OPEL ASTRA SPORT TOURER TURBO 136", "immat": "GY-939-XG", "commentaire": "BELLANDE GILLES", "serie": "", "serie_grue": ""}, {"hme": "H05011M", "rzb": "H05011M", "agence": "CA BASSIN", "libelle": "CROSSLAND.ELEGANCE.BUSINESS.1.6D.110.CH.BVM6", "immat": "GC-653-YD", "commentaire": "Remy MARTIN", "serie": "", "serie_grue": ""}, {"hme": "H05012R", "rzb": "H05012R", "agence": "CA BASSIN", "libelle": "SKODA ELROQ ELEMENT 60", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05014R", "rzb": "H05014R", "agence": "CA BASSIN", "libelle": "SKODA ELROQ 85 Clever VP [5P] bva 1-286CH-6cv (SUV)", "immat": "HH-361-AN", "commentaire": "BOGAR CHARLY", "serie": "", "serie_grue": ""}, {"hme": "H05015Q", "rzb": "H05015Q", "agence": "CA BASSIN", "libelle": "OPEL ASTRA SPORT TOURER TURBO 136", "immat": "GZ-958-HK", "commentaire": "PICARD GUILLAUME", "serie": "", "serie_grue": ""}, {"hme": "H05109N", "rzb": "LVU076", "agence": "CA BASSIN", "libelle": "CANDELON Ghislain", "immat": "GM-416-EJ", "commentaire": "CANDELON Ghislain", "serie": "", "serie_grue": ""}, {"hme": "H05113N", "rzb": "LVU051", "agence": "CA BASSIN", "libelle": "PERRIERE Nicolas", "immat": "GE-715-PK", "commentaire": "NICOLAS PERRIERE", "serie": "", "serie_grue": ""}, {"hme": "H05130P", "rzb": "LVU094", "agence": "CA BASSIN", "libelle": "NOAILLES Clément", "immat": "GX-237-WR", "commentaire": "NOAILLES Clément", "serie": "", "serie_grue": ""}, {"hme": "H05131P", "rzb": "LVU093", "agence": "CA BASSIN", "libelle": "OPEL COMBO TAILLE M BLUEHDI 100S&S 950KG", "immat": "GX-489-WD", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05152H", "rzb": "VU12G", "agence": "CA BASSIN", "libelle": "FOURGON BENNE RENAULT", "immat": "EH-536-CM", "commentaire": "RAS", "serie": "VF6VG000156476840", "serie_grue": ""}, {"hme": "H05200I", "rzb": "VP07H", "agence": "CA BASSIN", "libelle": "CAMION 6X4 POLYBENNE GRUE MAN", "immat": "EL-474-KV", "commentaire": "M.LAFFONT", "serie": "WMA26SZZ3HM735650", "serie_grue": "1702012/17,001  n serie 100390125"}, {"hme": "H05201F", "rzb": "VP03E", "agence": "CA BASSIN", "libelle": "BI BENNE MARREL ET GRUE MAN", "immat": "DH-130-TV", "commentaire": "CASTELIN ALAIN", "serie": "14140021", "serie_grue": "l 1820 K2/2WMA26SZZ5EP055503  1061155 année 2014"}, {"hme": "H05247S", "rzb": "V402A", "agence": "CA BASSIN", "libelle": "CAMION DE LANCAGE", "immat": "DC-049-LL", "commentaire": "mes 07-09-2001", "serie": "HD0002344490", "serie_grue": "euro cargo"}, {"hme": "H05273R", "rzb": "VU75P", "agence": "CA BASSIN", "libelle": "FOURGON.BENNE.SIMPLE.CABINE.", "immat": "HF-201-QF", "commentaire": "WV3ZZZSZ5S9048974", "serie": "WV3ZZZSZ5S9048974", "serie_grue": ""}, {"hme": "H05276K", "rzb": "VU73J", "agence": "CA BASSIN", "libelle": "OPEL MOVANO CHASSIS CABINE", "immat": "FH-750-TN", "commentaire": "RAS", "serie": "WOVVST600KB176553", "serie_grue": ""}, {"hme": "H05277K", "rzb": "VU74J", "agence": "CA BASSIN", "libelle": "OPEL MOVANO CHASSIS CABINE", "immat": "FH-508-TN", "commentaire": "RAS", "serie": "WOVVST608KB176705", "serie_grue": ""}, {"hme": "h14500Q", "rzb": "h14500Q", "agence": "CA BASSIN", "libelle": "ROULOTTE - BASE VIE DE CHANTIER 4 PERS (loxam 580447)001026/01/2024", "immat": "GT-608-NZ", "commentaire": "Contrat Loxam 580447 48 mois", "serie": "", "serie_grue": ""}, {"hme": "H14501L", "rzb": "HV44K", "agence": "CA BASSIN", "libelle": "VRS ROULOTTE COURANT TYPE RFD 462 6 PLACES", "immat": "FV-643-JR", "commentaire": "RAS", "serie": "N° de serie 461651", "serie_grue": ""}, {"hme": "H14502L", "rzb": "HV45K", "agence": "CA BASSIN", "libelle": "VRS ROULOTTE COURANT TYPE RFD 462 6 PLACES", "immat": "FV-571-JR", "commentaire": "RAS", "serie": "N° de serie 461652", "serie_grue": ""}, {"hme": "H19200M", "rzb": "VR02H", "agence": "CA BASSIN", "libelle": "REMORQUE SARIS PLATEAU", "immat": "EN-134-HF", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19203K", "rzb": "VR09J", "agence": "CA BASSIN", "libelle": "REMORQUE GOURDON (mini pelle H04002K)", "immat": "FG-699-JC", "commentaire": "RAS", "serie": "SERIE 65061", "serie_grue": ""}, {"hme": "H19204K", "rzb": "VR10J", "agence": "CA BASSIN", "libelle": "REMORQUE GOURDON (mini pelle H04003K)", "immat": "FG-618-JC", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H04000K", "rzb": "P007J", "agence": "CA CANA", "libelle": "MINI PELLE AVEC BRH - KUBOTA U27  (REMORQUE 19201K)", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H04000M", "rzb": "P201L", "agence": "CA CANA", "libelle": "PELLE A PNEUS LIEBEHRR A918 COMPTACT", "immat": "", "commentaire": "RAS", "serie": "serie wlhz1508vzk( serie 110641)", "serie_grue": ""}, {"hme": "H04000Q", "rzb": "P206O", "agence": "CA CANA", "libelle": "PELLE PNEUS LIEBHERR A913 COMPACT", "immat": "", "commentaire": "RAS", "serie": "serie 161790", "serie_grue": ""}, {"hme": "H04001K", "rzb": "P008J", "agence": "CA CANA", "libelle": "MINI PELLE AVEC BRH - KUBOTA U27  (REMORQUE 19202K)", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05005N", "rzb": "H05005N", "agence": "CA CANA", "libelle": "PEUGEOT 308 SW ACTIVE PACK BLUEHDI 130 S/S BVM6", "immat": "GH-367-JV", "commentaire": "LALEVE CHRISTOPHE", "serie": "", "serie_grue": ""}, {"hme": "H05007Q", "rzb": "H05007Q", "agence": "CA CANA", "libelle": "OPEL ASTRA SPORT TOURER TURBO 136", "immat": "GY-130-PC", "commentaire": "MAS LOIC", "serie": "", "serie_grue": ""}, {"hme": "H05009Q", "rzb": "H05009Q", "agence": "CA CANA", "libelle": "PEUGEOT 208 BERLINE HYBRID 100 E-DCS6", "immat": "GY-348-KG", "commentaire": "DEFLY INES", "serie": "", "serie_grue": ""}, {"hme": "H05010Q", "rzb": "H05010Q", "agence": "CA CANA", "libelle": "RENAULT AUSTRAL EVOLUTION E-TECH HYBRIDE 200", "immat": "GY-077-GT", "commentaire": "RICHARD EMMANUEL", "serie": "", "serie_grue": ""}, {"hme": "H05011Q", "rzb": "H05011Q", "agence": "CA CANA", "libelle": "ID.5 2021 5P SUV PRO 286 LIFE MAX", "immat": "GZ-980-HA", "commentaire": "LAUGIER BRICE", "serie": "", "serie_grue": ""}, {"hme": "H05014N", "rzb": "H05014N", "agence": "CA CANA", "libelle": "PEUGEOT 308 SW Hdi 130 ALLURE PACK BVM6", "immat": "GF-828-XM", "commentaire": "PLA Sébastien", "serie": "", "serie_grue": ""}, {"hme": "H05017R", "rzb": "H05017R", "agence": "CA CANA", "libelle": "Skoda ELROQ 85 Clever VP", "immat": "HG-713-ER", "commentaire": "LALEVE CHRISTOPHE", "serie": "", "serie_grue": ""}, {"hme": "H05102P", "rzb": "LVU074", "agence": "CA CANA", "libelle": "MICHEL Damien", "immat": "GQ-145-YL", "commentaire": "MICHEL DAMIEN", "serie": "", "serie_grue": ""}, {"hme": "H05103P", "rzb": "LVU079", "agence": "CA CANA", "libelle": "POTTIER Sébastien", "immat": "GQ-172-FV", "commentaire": "SEBASTIEN POTTIER", "serie": "", "serie_grue": ""}, {"hme": "H05103R", "rzb": "H05103R", "agence": "CA CANA", "libelle": "RENAULT R5 ELEC", "immat": "HG-121-AZ", "commentaire": "VILLAIN Sandrine", "serie": "", "serie_grue": ""}, {"hme": "H05105Q", "rzb": "LVU015", "agence": "CA CANA", "libelle": "DUPUY Maxime", "immat": "HA-874-XC", "commentaire": "MAXIME DUPUY", "serie": "", "serie_grue": ""}, {"hme": "H05110N", "rzb": "LVU060", "agence": "CA CANA", "libelle": "PUYTHORAC Dominique", "immat": "GM-668-EJ", "commentaire": "PUYTHORAC DOMINIQUE", "serie": "", "serie_grue": ""}, {"hme": "H05122P", "rzb": "LVU027", "agence": "CA CANA", "libelle": "FANTINI Maurane", "immat": "GS-091-PP", "commentaire": "MAURANE FANTINI", "serie": "", "serie_grue": ""}, {"hme": "H05125P", "rzb": "LVU028", "agence": "CA CANA", "libelle": "PIRES-BERNARDO Antonio", "immat": "GT-608-CV", "commentaire": "ANTONIO PIRES-BERNARDO", "serie": "", "serie_grue": ""}, {"hme": "H05127P", "rzb": "LVU088", "agence": "CA CANA", "libelle": "GUERIN BENJAMIN", "immat": "GW-057-NQ", "commentaire": "GUERRIN BENJAMIN", "serie": "", "serie_grue": ""}, {"hme": "H05128P", "rzb": "LVU037", "agence": "CA CANA", "libelle": "CHAGNEAU Mickael", "immat": "GX-126-WR", "commentaire": "MICKAEL CHAGNEAU", "serie": "", "serie_grue": ""}, {"hme": "H05141P", "rzb": "LVU092", "agence": "CA CANA", "libelle": "RAGANET Dimitri", "immat": "GX-614-NV", "commentaire": "DIMITRI RAGANET", "serie": "", "serie_grue": ""}, {"hme": "H05203F", "rzb": "V807E", "agence": "CA CANA", "libelle": "CAMION BIBENNE MAN 8X4,BUSTO", "immat": "DJ-920-EF", "commentaire": "RAS", "serie": "WMA37SZZ0EP055524", "serie_grue": ""}, {"hme": "H05207F", "rzb": "VP02E", "agence": "CA CANA", "libelle": "BIBENNE GRUE 4X2 MAN", "immat": "DK-694-SY", "commentaire": "RAS", "serie": "WMA03SZZ6EM656095", "serie_grue": "Grue Marrel 1520 K 1051408"}, {"hme": "H05240M", "rzb": "V601H", "agence": "CA CANA", "libelle": "CAMION MAN 6X4 POLYBENNE.CAUMONT", "immat": "EP-048-SG", "commentaire": "RACHAT MEC  08/2017", "serie": "WMA30SZZ2HM720708", "serie_grue": "6/4 poly benne"}, {"hme": "H05240N", "rzb": "VX04M", "agence": "CA CANA", "libelle": "ASPIRATRICE EXCAVATRICE 8X4", "immat": "GF-746-DD", "commentaire": "RAS", "serie": "WMA92SZZ8MM872233", "serie_grue": "120 1586 ASPIRATRICE BENNE 10M3"}, {"hme": "H05240R", "rzb": "VP01P", "agence": "CA CANA", "libelle": "BIBENNE.GRUE.6X4.BESSE", "immat": "HE-464-ZS", "commentaire": "RAS", "serie": "YS2P6X40009366678", "serie_grue": "grue  hmf type1920k-rcs serie 1420898 numero 1150698"}, {"hme": "H14305I", "rzb": "HM91H", "agence": "CA CANA", "libelle": "CONTAINER 8\" AMIANTE", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14500R", "rzb": "HV02P", "agence": "CA CANA", "libelle": "ROULOTTE COURANT TYPE RFD462", "immat": "HE-803-FS", "commentaire": "RAS", "serie": "VJURFD250SF461751", "serie_grue": ""}, {"hme": "H14501N", "rzb": "HV52M", "agence": "CA CANA", "libelle": "VRS ROULOTTE COURANT TYPE RFD 462", "immat": "GG-698-AC", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14501R", "rzb": "HV03P", "agence": "CA CANA", "libelle": "ROULOTTE COURANT TYPE RFD462", "immat": "HE-998-FS", "commentaire": "RAS", "serie": "VJURFD250F461752", "serie_grue": ""}, {"hme": "H14502N", "rzb": "HV53M", "agence": "CA CANA", "libelle": "VRS ROULOTTE COURANT TYPE RFD 462", "immat": "GG-753-JF", "commentaire": "RAS", "serie": "vgurfb25onf461718", "serie_grue": ""}, {"hme": "H14503N", "rzb": "HV54M", "agence": "CA CANA", "libelle": "VRS ROULOTTE COURANT TYPE RFD 462", "immat": "GG-827-JF", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14505L", "rzb": "HV47K", "agence": "CA CANA", "libelle": "VRS ROULOTTE COURANT TYPE RFD 462", "immat": "FV-727-HD", "commentaire": "RAS", "serie": "N° de serie 461653", "serie_grue": ""}, {"hme": "H18600L", "rzb": "MH01K", "agence": "CA CANA", "libelle": "ECLATEUR HB5058", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19201K", "rzb": "VR07J", "agence": "CA CANA", "libelle": "REMORQUE GOURDON (mini pelle H04000K)", "immat": "FG-268-NZ", "commentaire": "RAS", "serie": "SERIE 64953 SERIE BRH BE 110949", "serie_grue": ""}, {"hme": "H19202K", "rzb": "VR08J", "agence": "CA CANA", "libelle": "REMORQUE GOURDON (mini pelle H04001K)", "immat": "FG-436-NZ", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H04000L", "rzb": "P012K", "agence": "CA RESO", "libelle": "PELLE COMPACTE KUBOTA U27 ( REMORQUE H19201L)", "immat": "", "commentaire": "RAS", "serie": "SERIE 67319", "serie_grue": ""}, {"hme": "H04000P", "rzb": "P020N", "agence": "CA RESO", "libelle": "MINI PELLE KOBELCO SK25SR", "immat": "", "commentaire": "RAS", "serie": "PV14-40849 BRH EPIROC SB102 BES164896 attache morin m1", "serie_grue": ""}, {"hme": "H04000R", "rzb": "P021P", "agence": "CA RESO", "libelle": "MINI PELLE YANMAR VIO27", "immat": "", "commentaire": "RAS", "serie": "YCE VIO27 JSCM03012", "serie_grue": ""}, {"hme": "H04001L", "rzb": "P013K", "agence": "CA RESO", "libelle": "PELLE COMPACTE KUBOTA U27 ( REMORQUE H19202L)", "immat": "", "commentaire": "RAS", "serie": "SERIE 66729", "serie_grue": ""}, {"hme": "H04005K", "rzb": "P011J", "agence": "CA RESO", "libelle": "MINI PELLE KUBOTA U36 3.5T", "immat": "", "commentaire": "RAS", "serie": "SERIE 11803 SERIE MOTEUR 7KJ6690", "serie_grue": ""}, {"hme": "H05001Q", "rzb": "H05001Q", "agence": "CA RESO", "libelle": "VW GOLF LIFE PLUS 2.0 TDI 116 DSG7 DAUBA", "immat": "GW-693-WT", "commentaire": "FLORIAN DAUBA", "serie": "", "serie_grue": ""}, {"hme": "H05004Q", "rzb": "H05004Q", "agence": "CA RESO", "libelle": "VOLKSWAGEN GOLF 5P 116 DSG LIFE PLUS LAULAN", "immat": "GX-435-LM", "commentaire": "BRUNO LAULAN", "serie": "", "serie_grue": ""}, {"hme": "H05005R", "rzb": "H05005R", "agence": "CA RESO", "libelle": "SKODA ENYAQ 5P 85 - Cambou", "immat": "HF-283-DR", "commentaire": "PHILIPPE CAMBOU", "serie": "", "serie_grue": ""}, {"hme": "H05008P", "rzb": "H05008P", "agence": "CA RESO", "libelle": "VOLKSWAGEN GOLF BERLINE 2.0 TDI SCR 116DSG LIFE PLUS", "immat": "GS-099-XX", "commentaire": "PREZELIN Nicolas", "serie": "", "serie_grue": ""}, {"hme": "H05009N", "rzb": "H05009N", "agence": "CA RESO", "libelle": "PEUGEOT 308 SW/2021/5P/BREAK PHEV 180 E-EAT8 BERNAOLA001005/12/2022", "immat": "GK-378-PF", "commentaire": "BERNAOLA THOMAS", "serie": "", "serie_grue": ""}, {"hme": "H05009P", "rzb": "H05009P", "agence": "CA RESO", "libelle": "RENAULT KANGOO 5P MONOSPACE TECHNO BLUE DCI 95 LANDRIT01029/08/2023", "immat": "GN-006-WT", "commentaire": "LANDRIT MEGANE", "serie": "", "serie_grue": ""}, {"hme": "H05012M", "rzb": "H05012M", "agence": "CA RESO", "libelle": "5008.Hdi.130.ACTIVE.BUSINESS.BVM6 CAMBOU", "immat": "GC-577-MY", "commentaire": "CAMBOU Philippe", "serie": "", "serie_grue": ""}, {"hme": "H05014Q", "rzb": "H05014Q", "agence": "CA RESO", "libelle": "OPEL ASTRA SPORT TOURER TURBO 136 RAYNAUD", "immat": "GZ-595-WW", "commentaire": "RAYNAUD REMY", "serie": "", "serie_grue": ""}, {"hme": "H05015P", "rzb": "H05015P", "agence": "CA RESO", "libelle": "CITROEN C3 AIRCROSS MAX BLUE HDI 110 BVM6 HERNANDEZ", "immat": "GT-850-LB", "commentaire": "HERNANDEZ MICHAEL", "serie": "", "serie_grue": ""}, {"hme": "H05025C", "rzb": "H05025C", "agence": "CA RESO", "libelle": "BERLINDO 2 - D90F - MULTI PACK - 5 portes", "immat": "BX-876-RQ", "commentaire": "JP RODRIGUES (ex J. F. SALSOU)", "serie": "", "serie_grue": ""}, {"hme": "H05100Q", "rzb": "LVU002", "agence": "CA RESO", "libelle": "BOUCHER Philippe", "immat": "HC-417-BJ", "commentaire": "PHILIPPE BOUCHER", "serie": "", "serie_grue": ""}, {"hme": "H05101Q", "rzb": "LVU042", "agence": "CA RESO", "libelle": "VILLENAVE Jeremy", "immat": "GX-860-XH", "commentaire": "VILLENAVE JEREMY", "serie": "", "serie_grue": ""}, {"hme": "H05102Q", "rzb": "LVU102", "agence": "CA RESO", "libelle": "VERDOIS Yannick", "immat": "GX-974-XH", "commentaire": "VERDOIS", "serie": "", "serie_grue": ""}, {"hme": "H05102R", "rzb": "", "agence": "CA RESO", "libelle": "RAUFLET Quentin", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05110E", "rzb": "VU22D", "agence": "CA RESO", "libelle": "RENAULT MASTER CABINE APPROF", "immat": "CY-525-BS", "commentaire": "RAUFLET", "serie": "VF1MAA4DE49510821", "serie_grue": ""}, {"hme": "H05110P", "rzb": "LVU101", "agence": "CA RESO", "libelle": "ZENGUINIAN Antoine", "immat": "GX-882-XH", "commentaire": "ZENGUIGNAN ANTOINE", "serie": "", "serie_grue": ""}, {"hme": "H05114M", "rzb": "LVU069", "agence": "CA RESO", "libelle": "POUYADE Christophe", "immat": "GC-052-KA", "commentaire": "POUYADE CHRISTOPHE", "serie": "", "serie_grue": ""}, {"hme": "H05115Q", "rzb": "LVU100", "agence": "CA RESO", "libelle": "CARPENTEY Nicolas", "immat": "GX-958-WD", "commentaire": "CARPENTEY Nicolas", "serie": "", "serie_grue": ""}, {"hme": "H05117P", "rzb": "LVU001", "agence": "CA RESO", "libelle": "CAZEAUX Pierre-Olivier", "immat": "HC-730-HR", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05129P", "rzb": "LVU044", "agence": "CA RESO", "libelle": "RIORD Adrien", "immat": "GX-024-XJ", "commentaire": "RIORD ADRIEN", "serie": "", "serie_grue": ""}, {"hme": "H05137P", "rzb": "LVU041", "agence": "CA RESO", "libelle": "LACOSTE Christophe", "immat": "GX-868-XH", "commentaire": "CHRISTOPHE LACOSTE", "serie": "", "serie_grue": ""}, {"hme": "H05138P", "rzb": "LVU036", "agence": "CA RESO", "libelle": "ROMERO Nathanael", "immat": "GX-024-QW", "commentaire": "NATHANAEL ROMERO", "serie": "", "serie_grue": ""}, {"hme": "H05139P", "rzb": "LVU033", "agence": "CA RESO", "libelle": "GRAIN Kevin", "immat": "GT-592-QM", "commentaire": "KEVIN GRAIN", "serie": "", "serie_grue": ""}, {"hme": "H05140P", "rzb": "LVU016", "agence": "CA RESO", "libelle": "EQUIPE KEOLIS", "immat": "GX-589-XH", "commentaire": "KEVIN GRAIN", "serie": "", "serie_grue": ""}, {"hme": "H05201I", "rzb": "VP08H", "agence": "CA RESO", "libelle": "CAMION 6X4 POLYBENNE GRUE MAN", "immat": "EL-908-NZ", "commentaire": "RAS", "serie": "WMA03SZZ6EM656095", "serie_grue": "wma26szz7hm733114 modele pk17001sld03/serie 100389876"}, {"hme": "H05202F", "rzb": "V601E", "agence": "CA RESO", "libelle": "CAMION PORTEUR MAN 6X4", "immat": "DH-718-GS", "commentaire": "FORAGE", "serie": "WMA26SZZ9EPO55472", "serie_grue": ""}, {"hme": "H05208T", "rzb": "V406A", "agence": "CA RESO", "libelle": "RENAULT KERAX CARROSERIE 1/2 FOURGON", "immat": "AL-226-HZ", "commentaire": "RAS", "serie": "WMA03SZZ6EM656095", "serie_grue": ""}, {"hme": "H05241K", "rzb": "VP10J", "agence": "CA RESO", "libelle": "BIBENNE.GRUE.6X4 AVEC POTEAUX", "immat": "FE-585-TG", "commentaire": "RAS", "serie": "WMA26SZZ6KM806170", "serie_grue": "PM 18523  serie G15300221829"}, {"hme": "H05241R", "rzb": "VP02P", "agence": "CA RESO", "libelle": "BIBENNE.GRUE.6X4.", "immat": "HE-469-ZS", "commentaire": "PORTE.POTEAUX", "serie": "YS2P6X40009367008", "serie_grue": "type 1920k serie 1420896 numero 1150689"}, {"hme": "H05270J", "rzb": "VU63I", "agence": "CA RESO", "libelle": "RENAULT MASTER", "immat": "EZ-445-QG", "commentaire": "RAS", "serie": "VF6VG000160943713", "serie_grue": ""}, {"hme": "H05270Q", "rzb": "LVU104", "agence": "CA RESO", "libelle": "FOURGON PLATEAU BENNE", "immat": "GP-880-FK", "commentaire": "LOCATION 24 MOIS LEADER.RENT", "serie": "", "serie_grue": ""}, {"hme": "H05272J", "rzb": "VU64I", "agence": "CA RESO", "libelle": "RENAULT MASTER", "immat": "EZ-513-QG", "commentaire": "RAS", "serie": "VF6VG000660943710", "serie_grue": ""}, {"hme": "H05272L", "rzb": "VU77K", "agence": "CA RESO", "libelle": "FOURGON IVECO BENNE GRUE", "immat": "FT-825-GM", "commentaire": "RAS", "serie": "ZCFCA35BXOD656276", "serie_grue": ""}, {"hme": "H05272M", "rzb": "VU79L", "agence": "CA RESO", "libelle": "FOURGON IVECO DAILY", "immat": "GC-292-SC", "commentaire": "LOPEZ TRISTAN", "serie": "ZCFC835B105427703", "serie_grue": ""}, {"hme": "H05273J", "rzb": "VU65I", "agence": "CA RESO", "libelle": "RENAULT MASTER", "immat": "FA-514-DE", "commentaire": "RAS", "serie": "VF6VG000X60943712", "serie_grue": ""}, {"hme": "H05306P", "rzb": "VR76A", "agence": "CA RESO", "libelle": "REMORQUE PORTE-ENGINS TRACTÚE", "immat": "CR-362-SM", "commentaire": "FORAGE", "serie": "vgvts243BW1SV0064", "serie_grue": "type ts243b serie vgtvs243bwasv0064"}, {"hme": "H05317P", "rzb": "VR75A", "agence": "CA RESO", "libelle": "REMORQUE PORTE ENGIN", "immat": "DQ-521-HH", "commentaire": "FORAGE", "serie": "3FV2C00012", "serie_grue": ""}, {"hme": "H10401H", "rzb": "TH03G", "agence": "CA RESO", "libelle": "TREUIL HYDRAULIQUE", "immat": "EF-663-HK", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14300L", "rzb": "HM96K", "agence": "CA RESO", "libelle": "CONTAINER 8' DRY NEUF", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14300M", "rzb": "HM65L", "agence": "CA RESO", "libelle": "CONTAINERS 20'", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14301L", "rzb": "HM97K", "agence": "CA RESO", "libelle": "CONTAINER 8' DRY NEUF", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14301M", "rzb": "HM64L", "agence": "CA RESO", "libelle": "CONTAINERS 20'", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14302M", "rzb": "HM63L", "agence": "CA RESO", "libelle": "CONTAINERS 8'", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14303M", "rzb": "HM62L", "agence": "CA RESO", "libelle": "CONTAINERS 8'", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14304M", "rzb": "HM61L", "agence": "CA RESO", "libelle": "CONTAINERS 8'", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14305M", "rzb": "HM60L", "agence": "CA RESO", "libelle": "CONTAINERS 8'", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14306M", "rzb": "HM59L", "agence": "CA RESO", "libelle": "CONTAINERS 8'", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14500M", "rzb": "HV48L", "agence": "CA RESO", "libelle": "VRS ROULOTTE DAUDIN 8 PLACES", "immat": "GC-561-SL", "commentaire": "RAS", "serie": "vf93502d021438233", "serie_grue": ""}, {"hme": "H14504J", "rzb": "HV59I", "agence": "CA RESO", "libelle": "ROULOTTE VRS 4 PLACES N°5310", "immat": "EY-588-CX", "commentaire": "RAS", "serie": "vjurfe160jf405310", "serie_grue": ""}, {"hme": "H14505J", "rzb": "HV60I", "agence": "CA RESO", "libelle": "ROULOTTE VRS 6 PLACES N°1495", "immat": "EZ-656-FK", "commentaire": "VILLENAVE", "serie": "vjurfd250jf461495", "serie_grue": ""}, {"hme": "H14506J", "rzb": "HV61I", "agence": "CA RESO", "libelle": "ROULOTTE VRS 6 PLACES N°1496", "immat": "EY-510-EG", "commentaire": "TEREGA", "serie": "", "serie_grue": ""}, {"hme": "H14511H", "rzb": "H14511H", "agence": "CA RESO", "libelle": "VRS.ROULOTTE.DE.CHANTIER(LOXAM.247725)  BAYLE", "immat": "EG-259-EG", "commentaire": "RESTITUE A LOXAM LE 06/05/2022", "serie": "", "serie_grue": ""}, {"hme": "H19101H", "rzb": "H19101H", "agence": "CA RESO", "libelle": "MACHINE.A.SOUDER.MIROIR.OMISA.SP315.FORAGE", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19200N", "rzb": "VR04M", "agence": "CA RESO", "libelle": "REMORQUE LIDER 42950", "immat": "GG-003-CZ", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19200Q", "rzb": "VR05O", "agence": "CA RESO", "libelle": "REMORQUE HUBIERE TPG 3502 35", "immat": "GY-035-HG", "commentaire": "AGUILAR", "serie": "", "serie_grue": ""}, {"hme": "H19201A", "rzb": "VR78A", "agence": "CA RESO", "libelle": "REMORQUE TOURET", "immat": "DR-177-SW", "commentaire": "RAS", "serie": "10149", "serie_grue": ""}, {"hme": "H19201C", "rzb": "VR96B", "agence": "CA RESO", "libelle": "REMORQUE.PORTE.TOURET.LANCIER", "immat": "BQ-216-KC", "commentaire": "AFFECTATION MRESO STE GUJAN", "serie": "", "serie_grue": ""}, {"hme": "H19201H", "rzb": "VR06G", "agence": "CA RESO", "libelle": "REMORQUE.PORTE.ENGIN<3,5T.SATELLITE.", "immat": "EZ-717-DD", "commentaire": "MARINELLO", "serie": "", "serie_grue": ""}, {"hme": "H19202L", "rzb": "VR12K", "agence": "CA RESO", "libelle": "REMORQUE GOURDON -( MINI PELLE H04001L)", "immat": "FQ-066-ZL", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19202X", "rzb": "VR23A", "agence": "CA RESO", "libelle": "REMORQUE DEROULEUSE S1500", "immat": "BQ-984-ZM", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19204R", "rzb": "VR77A", "agence": "CA RESO", "libelle": "REMORQUE PORTE TOURET", "immat": "DC-753-DN", "commentaire": "RAS", "serie": "XS228250", "serie_grue": "type k 102 serie vf9k10210xs22850"}, {"hme": "H19400P", "rzb": "A455N", "agence": "CA RESO", "libelle": "FOREUSE GRUNDODRILL 18N", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19401E", "rzb": "A454D", "agence": "CA RESO", "libelle": "FOREUSE GRUNDODRILL 15XPT TD 73", "immat": "", "commentaire": "FORAGE", "serie": "SERIE DRI 133300805 DRI 20005", "serie_grue": ""}, {"hme": "H03015R", "rzb": "A265A", "agence": "SST", "libelle": "COMPRESSEUR MOBILE", "immat": "7046PT33", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05100P", "rzb": "LVU025", "agence": "SST", "libelle": "MALLET Pierre", "immat": "GV-190-SZ", "commentaire": "DEBAT DAVID", "serie": "", "serie_grue": ""}, {"hme": "H05101M", "rzb": "LVU068", "agence": "SST", "libelle": "THERME Valentin", "immat": "GA-986-RC", "commentaire": "THERME", "serie": "", "serie_grue": ""}, {"hme": "H05111N", "rzb": "LVU077", "agence": "SST", "libelle": "RAITIERE JB", "immat": "GM-594-DW", "commentaire": "RAITIERE JEAN-BAPTISTE", "serie": "", "serie_grue": ""}, {"hme": "H05112N", "rzb": "LVU064", "agence": "SST", "libelle": "NADRI", "immat": "GF-895-DB", "commentaire": "NADRI", "serie": "", "serie_grue": ""}, {"hme": "H05114N", "rzb": "LVU050", "agence": "SST", "libelle": "DUVIGNEAU", "immat": "GG-684-WY", "commentaire": "DUVIGNEAU", "serie": "", "serie_grue": ""}, {"hme": "H05114P", "rzb": "LVU035", "agence": "SST", "libelle": "LE MEE Fabrice", "immat": "GW-358-LD", "commentaire": "LE MEE FABRICE", "serie": "", "serie_grue": ""}, {"hme": "H05119N", "rzb": "LVU049", "agence": "SST", "libelle": "DEBAT David", "immat": "GH-276-NV", "commentaire": "SST", "serie": "", "serie_grue": ""}, {"hme": "H05201G", "rzb": "V416F", "agence": "SST", "libelle": "CAMION MAN REHABILITATION", "immat": "DX-958-DM", "commentaire": "RAS", "serie": "WMAN16ZZ4EY316195", "serie_grue": ""}, {"hme": "H05203Y", "rzb": "V412A", "agence": "SST", "libelle": "CAMION FOURGON MIDLUM 190.12", "immat": "FD-919-WF", "commentaire": "RAS", "serie": "VF644AGE000000130", "serie_grue": ""}, {"hme": "H05205I", "rzb": "V418H", "agence": "SST", "libelle": "CAMION REHABILITATION MAN", "immat": "ER-638-WP", "commentaire": "RAS", "serie": "WMAN16ZZ8HY365243", "serie_grue": ""}, {"hme": "H05278K", "rzb": "VU75J", "agence": "SST", "libelle": "FOURGON REHABILITATION ELECTRIQUE", "immat": "FK-505-WT", "commentaire": "FOURGON ROBOT REHA", "serie": "WOVMRS605KB176811", "serie_grue": ""}, {"hme": "H10400I", "rzb": "TH02E", "agence": "SST", "libelle": "TREUIL HYDRAULIQUE", "immat": "DL-574-WY", "commentaire": "SST", "serie": "", "serie_grue": ""}, {"hme": "H10401E", "rzb": "TH01D", "agence": "SST", "libelle": "TREUIL HYDRAULIQUE TR 4001/ES", "immat": "CV-135-TQ", "commentaire": "SST", "serie": "", "serie_grue": ""}, {"hme": "H14329F", "rzb": "HM66A", "agence": "SST", "libelle": "CONTAINER 40M3", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19200L", "rzb": "VR03K", "agence": "SST", "libelle": "REMORQUE FOURGON LIDER", "immat": "FP-216-VJ", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05000P", "rzb": "H05000P", "agence": "AQUALIS", "libelle": "ID.4 2020 SUV 77kWh Pro Business", "immat": "GL-653-AT", "commentaire": "SANS ARNAUD", "serie": "", "serie_grue": ""}, {"hme": "H05006P", "rzb": "H05006P", "agence": "AQUALIS", "libelle": "VW GOLF SW LIFE PLUS 2.0 TDI 116 BVM6", "immat": "GX-732-LW", "commentaire": "LE CLAINCHE CEDRIC", "serie": "", "serie_grue": ""}, {"hme": "H05014P", "rzb": "H05014P", "agence": "AQUALIS", "libelle": "VW GOLF SW LIFE PLUS 2.0 TDI 116 BVM6", "immat": "GX-897-LW", "commentaire": "MARION URRUTIA", "serie": "", "serie_grue": ""}, {"hme": "H05016N", "rzb": "H05016N", "agence": "AQUALIS", "libelle": "OPEL CROSSLAND ELEGANCE BUSINESS 1.5D 120 CH AUTO", "immat": "GE-100-AG", "commentaire": "KREMER VANESSA", "serie": "", "serie_grue": ""}, {"hme": "H05100L", "rzb": "LVU061", "agence": "AQUALIS", "libelle": "MANOUELIAN Alice", "immat": "FM-655-SM", "commentaire": "MANOUELIAN ALICE", "serie": "", "serie_grue": ""}, {"hme": "H05100R", "rzb": "LVU103", "agence": "AQUALIS", "libelle": "SARRAZIN Benjamin", "immat": "HF-102-YH", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05101P", "rzb": "LVU081", "agence": "AQUALIS", "libelle": "KESSL Nicolas", "immat": "GR-563-SQ", "commentaire": "NICOLAS KESSL", "serie": "", "serie_grue": ""}, {"hme": "H05102F", "rzb": "VU26E", "agence": "AQUALIS", "libelle": "FOURGON.MASTER.VIDEO.HYDROSCAN", "immat": "DC-229-NA", "commentaire": "RAS", "serie": "VF1MAFESC50070941", "serie_grue": ""}, {"hme": "H05104N", "rzb": "LVU052", "agence": "AQUALIS", "libelle": "COUILLAUD Stéphane", "immat": "GF-111-BE", "commentaire": "COUILLAUD STEPHANE", "serie": "", "serie_grue": ""}, {"hme": "H05104P", "rzb": "LVU099", "agence": "AQUALIS", "libelle": "ARLIE Clement", "immat": "GY-960-XZ", "commentaire": "ARLIE CLEMENT", "serie": "", "serie_grue": ""}, {"hme": "H05105P", "rzb": "LVU040", "agence": "AQUALIS", "libelle": "SCUDIER Alexandre", "immat": "GY-570-RR", "commentaire": "ALEXANDRE SCUDIER", "serie": "", "serie_grue": ""}, {"hme": "H05106P", "rzb": "LVU086", "agence": "AQUALIS", "libelle": "POISSON Deborah", "immat": "GT-805-PG", "commentaire": "DEBORAH POISSON", "serie": "", "serie_grue": ""}, {"hme": "H05108P", "rzb": "LVU034", "agence": "AQUALIS", "libelle": "ALRIC Antoine", "immat": "GW-475-EJ", "commentaire": "ANTOINE ALRIC", "serie": "", "serie_grue": ""}, {"hme": "H05109P", "rzb": "LVU090", "agence": "AQUALIS", "libelle": "PETIX Jérémie", "immat": "GW-205-YQ", "commentaire": "PETIX JEREMIE", "serie": "", "serie_grue": ""}, {"hme": "H05111K", "rzb": "LVU019", "agence": "AQUALIS", "libelle": "SARRAZIN Benjamin", "immat": "FL-071-JB", "commentaire": "SARRAZIN Benjamin", "serie": "", "serie_grue": ""}, {"hme": "H05116E", "rzb": "V003E", "agence": "AQUALIS", "libelle": "C3.HDI70.FAP.club.entreprise", "immat": "DD-583-PD", "commentaire": "VINCIGUERRA Constance depuis 07/2021 Ex Marion Urrutia", "serie": "VF7SC8HR4EW533362", "serie_grue": ""}, {"hme": "H05119P", "rzb": "LVU039", "agence": "AQUALIS", "libelle": "SUBIRA Alexandre", "immat": "GX-429-WD", "commentaire": "MANOUELIAN ALICE", "serie": "", "serie_grue": ""}, {"hme": "H05120P", "rzb": "LVU032", "agence": "AQUALIS", "libelle": "MOUELE HUGOR", "immat": "GT-085-PV", "commentaire": "MOUELE HUGOR", "serie": "", "serie_grue": ""}, {"hme": "H05241M", "rzb": "VX03L", "agence": "AQUALIS", "libelle": "CAMION.HYDROCUREUR.MISTRAL.26T", "immat": "FZ-432-RR", "commentaire": "RAS", "serie": "WMA18SZZ9LM855662", "serie_grue": "rivard 8318 code camion 6886"}, {"hme": "H05270L", "rzb": "VU76K", "agence": "AQUALIS", "libelle": "FOURGON.ITV.OPEL.MOVANO", "immat": "FR-224-XP", "commentaire": "RAS", "serie": "N10PELCT626P650", "serie_grue": ""}, {"hme": "H05270P", "rzb": "VU67N", "agence": "AQUALIS", "libelle": "FOURGON.ITV.MERCEDES.SPRINTER", "immat": "GP-069-GC", "commentaire": "RAS", "serie": "W1V9076331P482482", "serie_grue": ""}, {"hme": "H05274J", "rzb": "VU66I", "agence": "AQUALIS", "libelle": "FOURGON.ITV", "immat": "FB-694-FZ", "commentaire": "RAS", "serie": "WOVMRL601KB162765", "serie_grue": ""}, {"hme": "H18601K", "rzb": "H18601K", "agence": "AQUALIS", "libelle": "DETECTEUR.RESO-VIVAX.NAMAN", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H20000M", "rzb": "H20000M", "agence": "AQUALIS", "libelle": "PENETROMETRE.MAP90", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05104R", "rzb": "", "agence": "CA", "libelle": "SERDA Jayson", "immat": "HH-839-CR", "commentaire": "JAYSON SERDA", "serie": "", "serie_grue": ""}, {"hme": "H05105R", "rzb": "", "agence": "CA", "libelle": "COSTA Paulo", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05106L", "rzb": "LVU062", "agence": "CA", "libelle": "Paulo COSTA", "immat": "FT-437-FS", "commentaire": "COSTA Paulo", "serie": "0", "serie_grue": ""}, {"hme": "H05106Q", "rzb": "LVU008", "agence": "CA", "libelle": "GOUINAUD Didier", "immat": "HB-687-JV", "commentaire": "GOUINAUD Didier", "serie": "", "serie_grue": ""}, {"hme": "H05108L", "rzb": "LVU020", "agence": "CA", "libelle": "SERDA Jayson", "immat": "FS-562-GV", "commentaire": "SERDA Jayson", "serie": "", "serie_grue": ""}, {"hme": "H05111P", "rzb": "LVU085", "agence": "CA", "libelle": "VE ATELIER", "immat": "GV-618-CW", "commentaire": "VE ATELIER", "serie": "", "serie_grue": ""}, {"hme": "H05113K", "rzb": "LVU021", "agence": "CA", "libelle": "VILLAIN Sandrine", "immat": "FN-093-MT", "commentaire": "VILLAIN Sandrine", "serie": "", "serie_grue": ""}, {"hme": "H03005T", "rzb": "A262A", "agence": "CMR BARON", "libelle": "COMPRESSEUR MOBILE", "immat": "7466QK33", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H03301Z", "rzb": "H03301Z", "agence": "CMR BARON", "libelle": "BRISE.ROCHE", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H04001Q", "rzb": "P202O", "agence": "CMR BARON", "libelle": "PELLE PNEUS LIEBHERR A910 COMPACT", "immat": "", "commentaire": "RAS", "serie": "serie 161673", "serie_grue": ""}, {"hme": "H04002M", "rzb": "P104H", "agence": "CMR BARON", "libelle": "PELLE PNEUS MECALAC", "immat": "", "commentaire": "RACHAT  MEC 2017", "serie": "SERIE 45 651", "serie_grue": ""}, {"hme": "H04401F", "rzb": "C218E", "agence": "CMR BARON", "libelle": "CHARGEUSE TL120", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "h04601e", "rzb": "h04601e", "agence": "CMR BARON", "libelle": "NIVELEUSE.NEW.HOLLAND.106.(M.Joyeux)", "immat": "", "commentaire": "achat 207 500", "serie": "SERIE NDBF20524", "serie_grue": ""}, {"hme": "H05000M", "rzb": "H05000M", "agence": "CMR BARON", "libelle": "PEUGEOT.308.SW.1.5.BLUEHDI.130.ACTIVE.BUSINESS", "immat": "FZ-266-MX", "commentaire": "BROSSE JEAN-PHILIPPE", "serie": "", "serie_grue": ""}, {"hme": "H05001P", "rzb": "H05001P", "agence": "CMR BARON", "libelle": "PEUGEOT 5008 1,5 BLUE Hdi 130 AUTO ALLURE PACK", "immat": "GN-484-RR", "commentaire": "PIERRE CELTON", "serie": "", "serie_grue": ""}, {"hme": "H05004P", "rzb": "H05004P", "agence": "CMR BARON", "libelle": "PEUGEOT 208 1.5 BLUEHDI 100 S&S STYLE BVM6", "immat": "GL-180-HN", "commentaire": "DARCHE Valentin", "serie": "", "serie_grue": ""}, {"hme": "H05005P", "rzb": "H05005P", "agence": "CMR BARON", "libelle": "CROSSLAND 1.5 Diesel 110ch ELEGANCE BUSINESS", "immat": "GN-043-LC", "commentaire": "ROUCHU ROMUALD", "serie": "", "serie_grue": ""}, {"hme": "H05009C", "rzb": "H05009C", "agence": "CMR BARON", "libelle": "3081,6 HDI 92 BUSI", "immat": "BR-403-QC", "commentaire": "M. AYED", "serie": "", "serie_grue": ""}, {"hme": "H05011P", "rzb": "H05011P", "agence": "CMR BARON", "libelle": "OPEL CROSSLAND 1.5 DIESEL 110ch ELEGANCE BUSINESS", "immat": "GQ-539-VG", "commentaire": "GOMES CARINE", "serie": "", "serie_grue": ""}, {"hme": "H05012P", "rzb": "H05012P", "agence": "CMR BARON", "libelle": "VOLKSWAGEN GOLF SW 2.0 TDI 116 DSG LIFE PLUS", "immat": "GN-215-NL", "commentaire": "MAURIN JULIEN", "serie": "", "serie_grue": ""}, {"hme": "H05015R", "rzb": "H05015R", "agence": "CMR BARON", "libelle": "SKODA ELROQ CLEVER 60", "immat": "HH-538-AN", "commentaire": "ECHEINE Emmanuel", "serie": "", "serie_grue": ""}, {"hme": "H05016R", "rzb": "H05016R", "agence": "CMR BARON", "libelle": "ELROQ 85 Clever VP [5P] bva 1-286CH-6cv", "immat": "HG-970-PW", "commentaire": "BROSSE JEAN-PHILIPPE", "serie": "", "serie_grue": ""}, {"hme": "H05103M", "rzb": "LVU048", "agence": "CMR BARON", "libelle": "CHATRIX Sébastien", "immat": "GA-668-MK", "commentaire": "CHATRIX Sébastien", "serie": "", "serie_grue": ""}, {"hme": "H05104M", "rzb": "LVU066", "agence": "CMR BARON", "libelle": "DUCROS Grégory", "immat": "GA-653-MK", "commentaire": "DUCROS Grégory", "serie": "", "serie_grue": ""}, {"hme": "H05105M", "rzb": "LVU067", "agence": "CMR BARON", "libelle": "GATA PAULO", "immat": "GA-525-MK", "commentaire": "GATA Paulo", "serie": "", "serie_grue": ""}, {"hme": "H05106M", "rzb": "LVU047", "agence": "CMR BARON", "libelle": "BRETTES Jérémy", "immat": "GA-659-MK", "commentaire": "BRETTE Jérémy", "serie": "", "serie_grue": ""}, {"hme": "H05109L", "rzb": "LVU022", "agence": "CMR BARON", "libelle": "ECHEINE Emmanuel", "immat": "FR-863-XC", "commentaire": "ECHEINE Emmanuel", "serie": "", "serie_grue": ""}, {"hme": "H05121N", "rzb": "LVU058", "agence": "CMR BARON", "libelle": "BAUCHIRE Thibault", "immat": "GJ-748-SR", "commentaire": "RAS", "serie": "0", "serie_grue": ""}, {"hme": "H05122N", "rzb": "LVU071", "agence": "CMR BARON", "libelle": "AGENCE BARON", "immat": "GJ-834-RN", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05123P", "rzb": "LVU084", "agence": "CMR BARON", "libelle": "JOYEUX Thomas", "immat": "GT-629-NE", "commentaire": "JOYEUX Thomas", "serie": "", "serie_grue": ""}, {"hme": "H05126P", "rzb": "LVU091", "agence": "CMR BARON", "libelle": "BRESSON J-F", "immat": "GX-372-BJ", "commentaire": "BRESSON JEAN-FRANCOIS", "serie": "", "serie_grue": ""}, {"hme": "H05133P", "rzb": "LVU095", "agence": "CMR BARON", "libelle": "DE GONZAGUE Cédric", "immat": "GX-776-WD", "commentaire": "DE GONZAGUE Cédric", "serie": "", "serie_grue": ""}, {"hme": "H05134P", "rzb": "LVU087", "agence": "CMR BARON", "libelle": "DUCASSE Mathieu", "immat": "GV-424-VM", "commentaire": "DUCASSE Mathieu", "serie": "", "serie_grue": ""}, {"hme": "H05135P", "rzb": "LVU098", "agence": "CMR BARON", "libelle": "ROUCHU Gilles", "immat": "GY-636-RR", "commentaire": "ROUCHU GILL", "serie": "", "serie_grue": ""}, {"hme": "H05153F", "rzb": "VU27E", "agence": "CMR BARON", "libelle": "RENAULT MASTER CABINE", "immat": "DH-687-RQ", "commentaire": "Laurent CARDOSO", "serie": "VF6VGV6U451373689", "serie_grue": ""}, {"hme": "H05204Z", "rzb": "V415A", "agence": "CMR BARON", "libelle": "CHASSIS CABINE RLT MIDLUM 220.14 LIGHT", "immat": "AB-988-WP", "commentaire": "ROUCHU Gilles", "serie": "", "serie_grue": ""}, {"hme": "H05230K", "rzb": "RN02J", "agence": "CMR BARON", "libelle": "EPANDEUSE EMULSION", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05240P", "rzb": "V618N", "agence": "CMR BARON", "libelle": "CAMION 6X4 MAN (chassis)", "immat": "GN-668-QH", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05241P", "rzb": "H05241P", "agence": "CMR BARON", "libelle": "CAMION.8X4.BIBENNE. RENTFORCE", "immat": "GS-288-PH", "commentaire": "RENTFORCE", "serie": "", "serie_grue": ""}, {"hme": "H05242K", "rzb": "V419J", "agence": "CMR BARON", "libelle": "CAMION 4X2 MAN", "immat": "FG-879-FJ", "commentaire": "MAURIN ALAIN", "serie": "", "serie_grue": ""}, {"hme": "H05270R", "rzb": "VU78P", "agence": "CMR BARON", "libelle": "FOURGON.BENNE.SIMPLE.CABINE. Remplacement H05153F", "immat": "HD-271-MZ", "commentaire": "RAS", "serie": "WV3ZZZSZ8R9045450", "serie_grue": ""}, {"hme": "H05271K", "rzb": "VU69J", "agence": "CMR BARON", "libelle": "FOURGON LIAISON OPEL MOVANO", "immat": "FH-716-XJ", "commentaire": "RAS", "serie": "WOVMRT606KB176998", "serie_grue": ""}, {"hme": "H05271L", "rzb": "H05271L", "agence": "CMR BARON", "libelle": "IVECO.DAILY.PLATEAU.BENNE.3T5.COFFRE LEADER RENT", "immat": "FT-364-GV", "commentaire": "LEADER RENT", "serie": "", "serie_grue": ""}, {"hme": "H05271R", "rzb": "VU79P", "agence": "CMR BARON", "libelle": "FOURGON.BENNE.SIMPLE.CABINE.", "immat": "HD-023-PP", "commentaire": "RAS", "serie": "WV3ZZZSZXR9045594", "serie_grue": ""}, {"hme": "H05272K", "rzb": "VU70J", "agence": "CMR BARON", "libelle": "FOURGON LIAISON OPEL VIVARO", "immat": "FH-640-XJ", "commentaire": "RAS", "serie": "WOVF7G606KV647004", "serie_grue": ""}, {"hme": "H05273K", "rzb": "VV02J", "agence": "CMR BARON", "libelle": "FOURGON REFECTOIRE (OPEL MOVANO)", "immat": "FJ-267-NQ", "commentaire": "RAS", "serie": "WOVVRS608KB176886", "serie_grue": ""}, {"hme": "H05273M", "rzb": "H05273M", "agence": "CMR BARON", "libelle": "FOURGON.BENNE.3T5.IVECO.LEADER.RENT", "immat": "GC-010-XD", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05303K", "rzb": "H05303K", "agence": "CMR BARON", "libelle": "BI-BENNE.ACIER.POUR.CAMION.4X2.AVEC.05242K", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05308U", "rzb": "VR81A", "agence": "CMR BARON", "libelle": "REMORQUE TRACTÚE POUR CB214D", "immat": "7008RA33", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H07100P", "rzb": "H07100P", "agence": "CMR BARON", "libelle": "GRAVILLONNEUR.ARENA.320", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H07200K", "rzb": "EE27J", "agence": "CMR BARON", "libelle": "FINISSEUR VOLVO P4820D", "immat": "", "commentaire": "RAS", "serie": "serie 730027", "serie_grue": ""}, {"hme": "H07300P", "rzb": "RV19N", "agence": "CMR BARON", "libelle": "ROULEAU BOMAG BW138AD-5", "immat": "", "commentaire": "RAS", "serie": "serie 101650461870", "serie_grue": ""}, {"hme": "H07303V", "rzb": "RP02A", "agence": "CMR BARON", "libelle": "COMPACTEUR A PNEUS CORINSA", "immat": "", "commentaire": "RAS", "serie": "serie 1421b/288", "serie_grue": ""}, {"hme": "H07304S", "rzb": "RV17A", "agence": "CMR BARON", "libelle": "COMPACTEUR VIBRANT AUTOMOTEUR", "immat": "", "commentaire": "RAS", "serie": "SERIE 48RZ00950", "serie_grue": ""}, {"hme": "H07310W", "rzb": "RV12A", "agence": "CMR BARON", "libelle": "BOMAG.BW120.AC-4Mixte.2,5T", "immat": "", "commentaire": "RAS", "serie": "SERIE 101880031067", "serie_grue": ""}, {"hme": "H07403H", "rzb": "H07403H", "agence": "CMR BARON", "libelle": "CUVE EMULSION", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H07707E", "rzb": "TA03A", "agence": "CMR BARON", "libelle": "TRACTEUR FIAT 8090 + BALAYEUSE", "immat": "4587KW82", "commentaire": "RAS", "serie": "serie 643033 immat 4587kw82 fiat 80/90", "serie_grue": ""}, {"hme": "H14304B", "rzb": "H14304B", "agence": "CMR BARON", "libelle": "CONTAINER.10'.(ArchivesCenonBSA))", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14500N", "rzb": "HV51M", "agence": "CMR BARON", "libelle": "VRS ROULOTTE COURANT TYPE RFD 462", "immat": "GG-766-AC", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14500P", "rzb": "H14500P", "agence": "CMR BARON", "libelle": "VRS.ROULOTTE.CHANTIER.LOXAM.568533", "immat": "GP-934-JR", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14501H", "rzb": "HV56G", "agence": "CMR BARON", "libelle": "MINIBASE 380 VRS", "immat": "EB-213-DG", "commentaire": "MINIBASE 380 VRS BARON", "serie": "vf9ezcc39eb881046", "serie_grue": ""}, {"hme": "H14501P", "rzb": "H14501P", "agence": "CMR BARON", "libelle": "VRS.ROULOTTE.CHANTIER.LOXAM.568534", "immat": "GP-916-JR", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H01203X", "rzb": "XC12A", "agence": "CMR LA TESTE", "libelle": "DISTRIDOM", "immat": "", "commentaire": "LA TESTE GNR", "serie": "", "serie_grue": ""}, {"hme": "H04402U", "rzb": "C644A", "agence": "CMR LA TESTE", "libelle": "CHARGEUR CAT 966G2", "immat": "", "commentaire": "RAS", "serie": "SERIE AXJ01330", "serie_grue": ""}, {"hme": "H05003R", "rzb": "H05003R", "agence": "CMR LA TESTE", "libelle": "Renault Scénic E-Tech techno 170 ch autonomie confort", "immat": "HH-377-AA", "commentaire": "Emmanuel BERLAND", "serie": "", "serie_grue": ""}, {"hme": "H05010N", "rzb": "H05010N", "agence": "CMR LA TESTE", "libelle": "RENAULT MEGANE ESTATE BUSINESS BLUE DCI (FONGAUFFIER)", "immat": "GG-412-PV", "commentaire": "FONGAUFFIER JULIEN", "serie": "", "serie_grue": ""}, {"hme": "H05011C", "rzb": "H05011C", "agence": "CMR LA TESTE", "libelle": "MEGANE3 BK D90F AUTH", "immat": "BT-431-PK", "commentaire": "Raphael LEMOINE", "serie": "", "serie_grue": ""}, {"hme": "H05013Q", "rzb": "H05013Q", "agence": "CMR LA TESTE", "libelle": "RENAULT AUSTRAL EVOLUTION E-TECH FULL HYBRID 201 (LEMOINE)", "immat": "HA-359-CY", "commentaire": "LEMOINE RAPHAEL", "serie": "", "serie_grue": ""}, {"hme": "H05017Q", "rzb": "H05017Q", "agence": "CMR LA TESTE", "libelle": "RENAULT CAPTUR E-TECH HYBRID 145 VP (GIRAUD)", "immat": "HA-762-BR", "commentaire": "ALEXANDRE GIRAUD", "serie": "", "serie_grue": ""}, {"hme": "H05022Q", "rzb": "H05022Q", "agence": "CMR LA TESTE", "libelle": "VW GOLF 1.5 ETSI DSG7 (CABANNES)", "immat": "HB-242-CG", "commentaire": "CABANNES PASCAL", "serie": "", "serie_grue": ""}, {"hme": "H05023C", "rzb": "H05023C", "agence": "CMR LA TESTE", "libelle": "308 Business pack - 5 portes - 1.6 HDI 92", "immat": "BX-780-RQ", "commentaire": "CONDUCTEUR JULIEN IMBERT EX BRUNO LOBERA", "serie": "", "serie_grue": ""}, {"hme": "h05107e", "rzb": "h05107e", "agence": "CMR LA TESTE", "libelle": "BERLINGO.Business.HDI75 (PERSO AGENCE)", "immat": "CW-281-YF", "commentaire": "VEHICULE DE LIAISON HME", "serie": "0", "serie_grue": ""}, {"hme": "H05107L", "rzb": "LVU065", "agence": "CMR LA TESTE", "libelle": "RIBEIRO Noa", "immat": "FQ-522-FL", "commentaire": "BLOCQUEL CHRISTOPHE", "serie": "", "serie_grue": ""}, {"hme": "H05107M", "rzb": "LVU046", "agence": "CMR LA TESTE", "libelle": "AGENCE CMR LA TESTE / GIRAUD", "immat": "GA-703-BJ", "commentaire": "AGENCE CMR LA TESTE / GIRAUD", "serie": "", "serie_grue": ""}, {"hme": "H05120N", "rzb": "LVU078", "agence": "CMR LA TESTE", "libelle": "DE ARAUJO Nelson", "immat": "GM-870-HP", "commentaire": "DE ARAUJO FERNANDES NELSON", "serie": "", "serie_grue": ""}, {"hme": "H05123I", "rzb": "VU07H", "agence": "CMR LA TESTE", "libelle": "FOURGON BENNE DOUBLE CABINE", "immat": "ER-068-ZT", "commentaire": "DONOVAN CORBEAU", "serie": "VF6VG000458583918", "serie_grue": ""}, {"hme": "H05123N", "rzb": "LVU059", "agence": "CMR LA TESTE", "libelle": "CORTEZ Taylor", "immat": "GM-041-DP", "commentaire": "CORTEZ TAYLOR", "serie": "0", "serie_grue": ""}, {"hme": "H05124I", "rzb": "VU08H", "agence": "CMR LA TESTE", "libelle": "FOURGON BENNE DOUBLE CABINE", "immat": "ER-433-ZS", "commentaire": "SANTOS DE MELO LUCAS", "serie": "VF6VG000058583916", "serie_grue": ""}, {"hme": "H05124N", "rzb": "LVU057", "agence": "CMR LA TESTE", "libelle": "BADIE Alexandre", "immat": "GJ-162-RP", "commentaire": "BADIE Alexandre", "serie": "0", "serie_grue": ""}, {"hme": "H05124P", "rzb": "LVU029", "agence": "CMR LA TESTE", "libelle": "GAYDIER Maxime", "immat": "GT-764-PG", "commentaire": "GAYDIER MAXIME", "serie": "", "serie_grue": ""}, {"hme": "H05125I", "rzb": "VU09H", "agence": "CMR LA TESTE", "libelle": "FOURGON BENNE DOUBLE CABINE", "immat": "ER-464-ZT", "commentaire": "PEREZ Nicolas", "serie": "VF6VG000258583917", "serie_grue": ""}, {"hme": "H05126I", "rzb": "VU10H", "agence": "CMR LA TESTE", "libelle": "FOURGON BENNE DOUBLE CABINE", "immat": "ER-653-ZT", "commentaire": "DEPOT", "serie": "VF6VG000858608514", "serie_grue": ""}, {"hme": "H05132P", "rzb": "LVU089", "agence": "CMR LA TESTE", "libelle": "GOURSAUD Alain", "immat": "GW-384-ZG", "commentaire": "GOURSAUD", "serie": "", "serie_grue": ""}, {"hme": "H05155H", "rzb": "VU16G", "agence": "CMR LA TESTE", "libelle": "FOURGON BENNE RENAULT", "immat": "EH-397-CJ", "commentaire": "Tarreau JP", "serie": "VF6VG000756476843", "serie_grue": ""}, {"hme": "H05203G", "rzb": "V808F", "agence": "CMR LA TESTE", "libelle": "BIBENNE MAN 8X4", "immat": "DV-665-RZ", "commentaire": "AGUIAR ANA", "serie": "", "serie_grue": ""}, {"hme": "H05206F", "rzb": "VP06E", "agence": "CMR LA TESTE", "libelle": "CAMION BIBENNE GRUE MAN 4X2", "immat": "DJ-565-LG", "commentaire": "JAN", "serie": "", "serie_grue": "1520k2 n 1051470"}, {"hme": "H05217V", "rzb": "RN01A", "agence": "CMR LA TESTE", "libelle": "CAMION 4 X 2 EPANDEUR", "immat": "EX-117-KS", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05240K", "rzb": "VP09J", "agence": "CMR LA TESTE", "libelle": "BIBENNE GRUE 6X4", "immat": "FD-793-VR", "commentaire": "SENTURENNE", "serie": "", "serie_grue": "pm18,5fab g15300111813 annéé 2018"}, {"hme": "H05240L", "rzb": "V809K", "agence": "CMR LA TESTE", "libelle": "CAMION 8X4 MAN", "immat": "FN-809-KQ", "commentaire": "ROUMEGOUS", "serie": "", "serie_grue": ""}, {"hme": "H05271N", "rzb": "VU82M", "agence": "CMR LA TESTE", "libelle": "FOURGON IVECO DAILLY", "immat": "GK-814-AZ", "commentaire": "RAS", "serie": "0", "serie_grue": ""}, {"hme": "H05272R", "rzb": "VU80P", "agence": "CMR LA TESTE", "libelle": "FOURGON.BENNE.SIMPLE.CABINE. REMPLACEMENT H05155H- 09/2025", "immat": "HF-163-QF", "commentaire": "RAS", "serie": "WV3ZZZSZ2S9047247", "serie_grue": ""}, {"hme": "H05274M", "rzb": "VU80L", "agence": "CMR LA TESTE", "libelle": "IVECO DAILY PLATEAU BENNE 3T5 COFFRE", "immat": "GB-500-JZ", "commentaire": "RAS", "serie": "ZCFCA35B905423595", "serie_grue": ""}, {"hme": "H07601E", "rzb": "MB03D", "agence": "CMR LA TESTE", "libelle": "POWER CURBER PC 150", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14501M", "rzb": "HV49L", "agence": "CMR LA TESTE", "libelle": "VRS ROULOTTE DAUDIN 6 PLACES", "immat": "GD-285-AX", "commentaire": "DE ARAUJO FERNANDES NELSON", "serie": "VF92502D021438084", "serie_grue": ""}, {"hme": "H14502K", "rzb": "HV39J", "agence": "CMR LA TESTE", "libelle": "ROULOTTE.DE.CHANTIER.VRS.6.PLACES", "immat": "FL-878-KX", "commentaire": "RAS", "serie": "VJURFD250KF461583", "serie_grue": ""}, {"hme": "H14502M", "rzb": "HV50L", "agence": "CMR LA TESTE", "libelle": "VRS ROULOTTE DAUDIN 6 PLACES", "immat": "GD-193-AX", "commentaire": "RAS", "serie": "vf92502D021438083", "serie_grue": ""}, {"hme": "H14504L", "rzb": "HV46K", "agence": "CMR LA TESTE", "libelle": "ROULOTTE.COURANT.TYPE.RFD462", "immat": "FV-666-AS", "commentaire": "GAYDIER MAXIME", "serie": "N° de serie 461649", "serie_grue": ""}, {"hme": "H01203Z", "rzb": "H01203Z", "agence": "EMP", "libelle": "CONTENEUR.DISTRIBUTEUR.GAZOLE/GNR", "immat": "", "commentaire": "EMP CUVE GAZOLE+GNR", "serie": "", "serie_grue": ""}, {"hme": "H01204Z", "rzb": "H01204Z", "agence": "EMP", "libelle": "CONTENEUR.DISTRIBUTEUR.OLEO 100", "immat": "", "commentaire": "EMP GO CUVE VERTE", "serie": "", "serie_grue": ""}, {"hme": "h04001g", "rzb": "h04001g", "agence": "EMP", "libelle": "PELLE.A.PNEUS.LIEBHERR.A914.COMPACT.15TSOUSA", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H04001P", "rzb": "H04001P", "agence": "EMP", "libelle": "PELLE.A.PNEUS(DAYDE).HITACHI.ZX95W", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H04002J", "rzb": "H04002J", "agence": "EMP", "libelle": "PELLE.A.PNEUS.VOLVO.EW180E.18T.GARCIA", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H04004K", "rzb": "H04004K", "agence": "EMP", "libelle": "PELLE.SUR.PNEUS.TAKEUCHI.11tonnes NOILLES LENAIC", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H04008H", "rzb": "H04008H", "agence": "EMP", "libelle": "PELLE.A.PNEUS.TEREX.TW85.8,5T.MOULET", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H04009H", "rzb": "H04009H", "agence": "EMP", "libelle": "PELLE.A.PNEUS.VOLVO.160EW.17T", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H04424S", "rzb": "H04424S", "agence": "EMP", "libelle": "CHARGEUSE.LIEBHERR.L506.5T.800L", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H04600N", "rzb": "H04600N", "agence": "EMP", "libelle": "NIVELEUSE CATERPILLAR 12M", "immat": "", "commentaire": "achat d'occasion année 2015 1648 heures", "serie": "", "serie_grue": ""}, {"hme": "H05001N", "rzb": "H05001N", "agence": "EMP", "libelle": "PEUGEOT 508 SW BREAK HYB (JOCELYN BOURRANT)1.6 HYBRID001020/06/2022", "immat": "GG-630-DQ", "commentaire": "BOURRANT JOCELYN", "serie": "", "serie_grue": ""}, {"hme": "H05001R", "rzb": "H05001R", "agence": "EMP", "libelle": "KIA EV3 (Ousset)", "immat": "HD-265-KW", "commentaire": "OUSSET CEDRIC", "serie": "", "serie_grue": ""}, {"hme": "H05002N", "rzb": "H05002N", "agence": "EMP", "libelle": "PEUGEOT 3008 / 2020/ 5P/ (JB FABRE) SUV BLUEHDI S&S ACTIV18/05/2022", "immat": "GG-129-EK", "commentaire": "FABRE JEAN BAPTISTE", "serie": "", "serie_grue": ""}, {"hme": "H05002Q", "rzb": "H05002Q", "agence": "EMP", "libelle": "RENAULT ESPACE(OLIVIER BOUHOT) ICONIC E-TECH FULL HYBRID 25/10/2023", "immat": "GR-282-QS", "commentaire": "OLIVIER BOUHOT", "serie": "", "serie_grue": ""}, {"hme": "H05003L", "rzb": "H05003L", "agence": "EMP", "libelle": "OPEL.CROSSLANDX.1.5.DIESEL.(Charlotte TARDIVEL) 102PS.ELE31/08/2020", "immat": "FR-904-SN", "commentaire": "PERERA Marco", "serie": "", "serie_grue": ""}, {"hme": "H05003P", "rzb": "H05003P", "agence": "EMP", "libelle": "OPEL CROSSLAND 1.5D (ALEXIS MONTEIRO) 110ch ELEGANCE BUSI08/06/2023", "immat": "GP-314-DH", "commentaire": "MONTEIRO Alexis", "serie": "", "serie_grue": ""}, {"hme": "H05003Q", "rzb": "H05003Q", "agence": "EMP", "libelle": "VOLKSWAGEN GOLF (SERGE VILLETTE)SW LIFE PLUS 2.0 TDI DSG725/01/2024", "immat": "GT-650-PP", "commentaire": "VILLETTE SERGE", "serie": "", "serie_grue": ""}, {"hme": "H05004L", "rzb": "H05004L", "agence": "EMP", "libelle": "RENAULT.CLIO.5.BLUEDCi.85.BVM6 (CEDRIC OUSSET)", "immat": "FR-141-JR", "commentaire": "CEDRIC OUSSET", "serie": "", "serie_grue": ""}, {"hme": "H05004R", "rzb": "H05004R", "agence": "EMP", "libelle": "ID.3 BEV 77KWH( LLEDOS CHRISTOPHE)PRO S 204CV", "immat": "HB-658-YM", "commentaire": "LLEDOS CHRISTOPHE", "serie": "", "serie_grue": ""}, {"hme": "H05006N", "rzb": "H05006N", "agence": "EMP", "libelle": "RENAULT Kangoo (Nicolas MELLAC) 5P /monospace Techno - Blue1029/11/2022", "immat": "GK-212-PN", "commentaire": "SEGALAT THIBAUT", "serie": "", "serie_grue": ""}, {"hme": "H05007M", "rzb": "H05007M", "agence": "EMP", "libelle": "208.BLUE.HDI.100.(SEB TRINEL) ACTIVE.BUSINESS.BVM6", "immat": "GC-480-MY", "commentaire": "TRINEL Sébastien", "serie": "", "serie_grue": ""}, {"hme": "H05010L", "rzb": "H05010L", "agence": "EMP", "libelle": "CROSSLAND.X.1.5.DIESEL.(CLEMENT GUERINEAU) 102PS.ELEGANCE18/12/2020", "immat": "FV-326-WP", "commentaire": "Clément GUERINEAU", "serie": "", "serie_grue": ""}, {"hme": "H05010M", "rzb": "H05010M", "agence": "EMP", "libelle": "2008.Hdi.110.ALLURE.BUSINESS (BENJAMIN BLIN)", "immat": "GC-855-MP", "commentaire": "BLIN Benjamin", "serie": "", "serie_grue": ""}, {"hme": "H05010P", "rzb": "H05010P", "agence": "EMP", "libelle": "OPEL ASTRA ELEGANCE BUSINESS (SEB GRAULE)  1.5D 130 BVA1026/04/2023", "immat": "GN-368-GR", "commentaire": "GRAULE SEBASTIEN", "serie": "", "serie_grue": ""}, {"hme": "H05011R", "rzb": "H05011R", "agence": "EMP", "libelle": "Peugeot E5008 (D. LAFFERE)BEV 73KW ALLURE", "immat": "HF-785-AH", "commentaire": "LAFFERE DAMIEN", "serie": "", "serie_grue": ""}, {"hme": "H05012N", "rzb": "H05012N", "agence": "EMP", "libelle": "MEGANE BUSINESS (MERCIER) BLUE DCI 115 EDC", "immat": "GH-905-RQ", "commentaire": "MERCIER ALEXANDRE", "serie": "", "serie_grue": ""}, {"hme": "H05013M", "rzb": "H05013M", "agence": "EMP", "libelle": "INSIGNIA.GRANSPORT.EDITION.BUSINESS.(DAMIEN LAFFERE)", "immat": "GD-695-AM", "commentaire": "LAFFERE DAMIEN", "serie": "", "serie_grue": ""}, {"hme": "H05013P", "rzb": "H05013P", "agence": "EMP", "libelle": "OPEL CROSSLAND 1.5 DIESEL(BRICE FENOUILLET) 110CH ELEGANC20/11/2023", "immat": "GS-584-BZ", "commentaire": "BRICE FENOUILLET", "serie": "", "serie_grue": ""}, {"hme": "H05017N", "rzb": "H05017N", "agence": "EMP", "libelle": "PEUGEOT 308 SW ACTIVE (FRANCK BOUCHET) PACK+NAV GRIS", "immat": "GJ-748-QE", "commentaire": "BOUCHET Franck", "serie": "", "serie_grue": ""}, {"hme": "H05018Q", "rzb": "H05018Q", "agence": "EMP", "libelle": "KIA NIRO EV 5 P (VINCENT DEFOSSEZ)BERLINE 65 KWH BUSINESS 150 KW", "immat": "HA-663-BX", "commentaire": "VINCENT DEFOSSEZ", "serie": "", "serie_grue": ""}, {"hme": "H05019Q", "rzb": "H05019Q", "agence": "EMP", "libelle": "KIA NIRO EV 5 P BERLINE (TARDIVEL CHARLOTTE)65 KWH BUSINESS 150 KW", "immat": "HA-897-BX", "commentaire": "CHARLOTTE TARDIVEL", "serie": "", "serie_grue": ""}, {"hme": "H05020Q", "rzb": "H05020Q", "agence": "EMP", "libelle": "VOLKSWAGEN ID3 77(CLEMENT GUERINEAU) KWH PRO S 204CH", "immat": "HB-937-TH", "commentaire": "CLEMENT GUERINEAU", "serie": "", "serie_grue": ""}, {"hme": "H05021Q", "rzb": "H05021Q", "agence": "EMP", "libelle": "VOLKSWAGEN (Dominique MINEO)ID3 77 KWH PRO S 204CH", "immat": "HB-428-LH", "commentaire": "DOMINIQUE MINEO", "serie": "", "serie_grue": ""}, {"hme": "H05023Q", "rzb": "H05023Q", "agence": "EMP", "libelle": "ID.4 5P SUV 77 KWH LIFE MAX CUVELIER CEDRIC", "immat": "HB-490-CG", "commentaire": "CUVELIER CEDRIC", "serie": "", "serie_grue": ""}, {"hme": "H05100K", "rzb": "LVU017", "agence": "EMP", "libelle": "DELAURIES Sébastien", "immat": "FE-125-TK", "commentaire": "DELAURIES Sébastien", "serie": "", "serie_grue": ""}, {"hme": "H05100M", "rzb": "LVU063", "agence": "EMP", "libelle": "MAYOR Isidore", "immat": "FX-515-TY", "commentaire": "MAYOR Isidore", "serie": "", "serie_grue": ""}, {"hme": "H05100N", "rzb": "LVU053", "agence": "EMP", "libelle": "DAYDE", "immat": "GG-571-FL", "commentaire": "DAYDE", "serie": "", "serie_grue": ""}, {"hme": "H05101C", "rzb": "H05101C", "agence": "EMP", "libelle": "C3.CLUB.ENTREPRISE", "immat": "BJ-305-JA", "commentaire": "BALDACCI Paola", "serie": "", "serie_grue": ""}, {"hme": "H05101N", "rzb": "LVU070", "agence": "EMP", "libelle": "MOULET", "immat": "GG-094-CR", "commentaire": "MOULET", "serie": "", "serie_grue": ""}, {"hme": "H05102N", "rzb": "LVU055", "agence": "EMP", "libelle": "GARCIA", "immat": "GH-818-GJ", "commentaire": "GARCIA", "serie": "", "serie_grue": ""}, {"hme": "H05103F", "rzb": "H05103F", "agence": "EMP", "libelle": "TRAFIC.CONFORT.LOBBE", "immat": "DG-890-CJ", "commentaire": "MORA", "serie": "", "serie_grue": ""}, {"hme": "H05103N", "rzb": "LVU054", "agence": "EMP", "libelle": "SOUSA", "immat": "GG-579-DQ", "commentaire": "SOUSA", "serie": "", "serie_grue": ""}, {"hme": "H05103Q", "rzb": "LVU011", "agence": "EMP", "libelle": "BARKATE Jonathan", "immat": "HB-847-GG", "commentaire": "HAMON JEAN-BAPTISTE", "serie": "", "serie_grue": ""}, {"hme": "H05104F", "rzb": "H05104F", "agence": "EMP", "libelle": "TRAFIC.3.2,00.DCI.115 (STRAUVEN Q)", "immat": "DK-838-JY", "commentaire": "CAZARD Ludovic", "serie": "", "serie_grue": ""}, {"hme": "H05104Q", "rzb": "LVU005", "agence": "EMP", "libelle": "ALARCON Sebastien", "immat": "HB-057-GH", "commentaire": "VICTOR DOMINGUES", "serie": "", "serie_grue": ""}, {"hme": "H05105N", "rzb": "LVU026", "agence": "EMP", "libelle": "RENARD DANIEL", "immat": "GS-601-KH", "commentaire": "RENARD Daniel", "serie": "", "serie_grue": ""}, {"hme": "H05106N", "rzb": "LVU075", "agence": "EMP", "libelle": "MARTINS DOMINGUES Victor", "immat": "GR-608-HH", "commentaire": "MARTINS DOMINGUES VICTOR MANUEL", "serie": "", "serie_grue": ""}, {"hme": "H05106R", "rzb": "LVU103", "agence": "EMP", "libelle": "DELAURIES Sébastien", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05107N", "rzb": "LVU080", "agence": "EMP", "libelle": "SAINT SERNIN Eric", "immat": "GR-622-HH", "commentaire": "SAINT SERNIN ERIC", "serie": "", "serie_grue": ""}, {"hme": "H05107P", "rzb": "LVU007", "agence": "EMP", "libelle": "PISANO Gilles", "immat": "HA-642-GS", "commentaire": "PISANO GILLES", "serie": "", "serie_grue": ""}, {"hme": "H05107Q", "rzb": "LVU014", "agence": "EMP", "libelle": "BELALIA Mohamed", "immat": "HB-902-GG", "commentaire": "ARNAUD DEBAR", "serie": "", "serie_grue": ""}, {"hme": "H05108N", "rzb": "LVU030", "agence": "EMP", "libelle": "TAVARES Francis", "immat": "GT-556-ZA", "commentaire": "TAVARES FRANCIS", "serie": "", "serie_grue": ""}, {"hme": "H05108Q", "rzb": "LVU012", "agence": "EMP", "libelle": "NOILLES Lénaïc", "immat": "HB-920-GG", "commentaire": "LEHANIC NOILLES", "serie": "", "serie_grue": ""}, {"hme": "H05109Q", "rzb": "LVU003", "agence": "EMP", "libelle": "DESCHAMPS Gilles", "immat": "HD-861-KP", "commentaire": "MORA JEAN-LUC", "serie": "", "serie_grue": ""}, {"hme": "H05110Q", "rzb": "LVU010", "agence": "EMP", "libelle": "TRONCO Jérome", "immat": "HB-889-GG", "commentaire": "DESCHAMPS GILLES", "serie": "", "serie_grue": ""}, {"hme": "H05111Q", "rzb": "LVU004", "agence": "EMP", "libelle": "LIENARD Mourad", "immat": "HB-036-GH", "commentaire": "LIENAR MOURAD", "serie": "", "serie_grue": ""}, {"hme": "H05112M", "rzb": "LVU023", "agence": "EMP", "libelle": "OUZZINE Youssef", "immat": "GD-982-NN", "commentaire": "OUZZINE YOUSSEF", "serie": "", "serie_grue": ""}, {"hme": "H05112Q", "rzb": "LVU009", "agence": "EMP", "libelle": "SARRAZAIN Alexis", "immat": "HB-786-GG", "commentaire": "CHAKROUN MEHDI", "serie": "", "serie_grue": ""}, {"hme": "H05113Q", "rzb": "LVU013", "agence": "EMP", "libelle": "VELLERET Jean-Luc", "immat": "HB-079-GH", "commentaire": "SARRAZIN ALEXIS", "serie": "", "serie_grue": ""}, {"hme": "H05114E", "rzb": "H05114E", "agence": "EMP", "libelle": "KANGOO.GD.CFT.DCI75.L1.FOURGON.DE.PASSE", "immat": "DB-361-KK", "commentaire": "FOURGON DE PASSE", "serie": "", "serie_grue": ""}, {"hme": "H05114Q", "rzb": "LVU006", "agence": "EMP", "libelle": "CAZARD Ludovic", "immat": "HB-840-GG", "commentaire": "VELLERET JEAN-LUC", "serie": "", "serie_grue": ""}, {"hme": "H05115N", "rzb": "LVU024", "agence": "EMP", "libelle": "FERRANDO Roger", "immat": "GT-897-NE", "commentaire": "FERRANDO ROGER", "serie": "", "serie_grue": ""}, {"hme": "H05116N", "rzb": "LVU083", "agence": "EMP", "libelle": "BRAZEILLES Mathieu", "immat": "GT-028-MD", "commentaire": "BRAZEILLES MATHIEU", "serie": "", "serie_grue": ""}, {"hme": "H05117N", "rzb": "LVU082", "agence": "EMP", "libelle": "CHIBANE Alexis", "immat": "GT-478-DE", "commentaire": "CHIBANE Alexis", "serie": "", "serie_grue": ""}, {"hme": "H05118N", "rzb": "LVU072", "agence": "EMP", "libelle": "SALGADO José", "immat": "GS-282-LT", "commentaire": "SALGADO JOSE", "serie": "", "serie_grue": ""}, {"hme": "H05118P", "rzb": "LVU043", "agence": "EMP", "libelle": "GRILO Roméo", "immat": "GZ-807-QX", "commentaire": "ROMEO GRILO", "serie": "", "serie_grue": ""}, {"hme": "H05120C", "rzb": "H05120C", "agence": "EMP", "libelle": "C3 CLUB ENTREPRISE", "immat": "BQ-091-XA", "commentaire": "M. SOUIAH", "serie": "", "serie_grue": ""}, {"hme": "H05121P", "rzb": "LVU038", "agence": "EMP", "libelle": "COMMINGES Pascal", "immat": "GV-272-DZ", "commentaire": "COMMINGES PASCAL", "serie": "", "serie_grue": ""}, {"hme": "H05125N", "rzb": "LVU056", "agence": "EMP", "libelle": "SOUIAH Bouziane", "immat": "GJ-384-YJ", "commentaire": "SOUIAH BOUZIANE", "serie": "", "serie_grue": ""}, {"hme": "H05132J", "rzb": "LVU018", "agence": "EMP", "libelle": "DESCHAMPS Gilles", "immat": "EZ-204-YK", "commentaire": "DESCHAMPS GILLES", "serie": "", "serie_grue": ""}, {"hme": "H05145Y", "rzb": "H05145Y", "agence": "EMP", "libelle": "KANGOO VU FOURGONETTE CONFORT", "immat": "8072KV82", "commentaire": "PEFOURQUE", "serie": "", "serie_grue": ""}, {"hme": "H05150H", "rzb": "H05150H", "agence": "EMP", "libelle": "FOURGON.BENNE.SIMPLE.CABINE.4X2.BABOULENE", "immat": "EH-481-CK", "commentaire": "BASTIE ROBERT", "serie": "", "serie_grue": ""}, {"hme": "H05151C", "rzb": "H05151C", "agence": "EMP", "libelle": "FOURGON.VESTIAIRE.FEMIL AMIANTE", "immat": "CA-156-MD", "commentaire": "CONDUCTEUR M. RIVES", "serie": "", "serie_grue": ""}, {"hme": "H05151H", "rzb": "H05151H", "agence": "EMP", "libelle": "FOURGON.BENNE.SIMPLE.CABINE.4XCLOVIS GAY", "immat": "EH-248-CN", "commentaire": "MORA JEAN-LUC", "serie": "", "serie_grue": ""}, {"hme": "H05201C", "rzb": "H05201C", "agence": "EMP", "libelle": "TRACTEUR.ROUTIER", "immat": "BX-827-PE", "commentaire": "BELLO", "serie": "", "serie_grue": ""}, {"hme": "H05202G", "rzb": "H05202G", "agence": "EMP", "libelle": "POLYBENNE.MAN.4X2.15T.Nicolas Manfredi", "immat": "DX-421-BJ", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05202I", "rzb": "H05202I", "agence": "EMP", "libelle": "BIBENNE.MAN.6X4.GRAVILLONNEUR.BACHAGE.MERLY", "immat": "EP-728-NK", "commentaire": "FIQUEMONT", "serie": "", "serie_grue": ""}, {"hme": "H05203H", "rzb": "H05203H", "agence": "EMP", "libelle": "CAMION.AMPLIROLL.MAN.6X4. NIETO", "immat": "EG-074-RR", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05203I", "rzb": "H05203I", "agence": "EMP", "libelle": "BIBENNE.6X4.MAN.BACHAGE.CRAMARO.(DEHIMI)", "immat": "EP-924-RB", "commentaire": "BILLOUX", "serie": "", "serie_grue": ""}, {"hme": "H05204F", "rzb": "H05204F", "agence": "EMP", "libelle": "BIBENNE.MAN.6X4.KENJI BUTSCHER", "immat": "DJ-573-LG", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05205F", "rzb": "H05205F", "agence": "EMP", "libelle": "BIBENNE.GRUE.MAN.4X2.(BOURDIAU.JM)", "immat": "DJ-558-LG", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05205Y", "rzb": "H05205Y", "agence": "EMP", "libelle": "BIBENNE.6X4.GOMEZ DAMIEN", "immat": "BR-958-JH", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05206Z", "rzb": "H05206Z", "agence": "EMP", "libelle": "CAMION.AMPLIROLL.4X2.15T.  CAMION DE PASSE", "immat": "DA-310-DS", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05230M", "rzb": "H05230M", "agence": "EMP", "libelle": "REPANDEUR.GRAVILLONNEUR.-.SECMAIR", "immat": "FW-489-JD", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05243K", "rzb": "H05243K", "agence": "EMP", "libelle": "CAMION.MAN.BIBENNE.BOUSQUET PHILIPPE.GRAVILLONEUR.4X2", "immat": "FJ-108-JH", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05245K", "rzb": "H05245K", "agence": "EMP", "libelle": "CAMION.4X2.AMPIROLL.MAN.BERGES", "immat": "FJ-047-WT", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05272P", "rzb": "H05272P", "agence": "EMP", "libelle": "FOURGON-ENROBE (SAUTIER ALEX)", "immat": "GM-246-LR", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05301W", "rzb": "H05301W", "agence": "EMP", "libelle": "REMORQUE.PORTE.ENGIN.TRACT.PTC3,5T", "immat": "CK-854-TQ", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05343U", "rzb": "H05343U", "agence": "EMP", "libelle": "SEMI.REMORQUE.PORTE.ENGIN", "immat": "BY-509-AH", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H06701Y", "rzb": "H06701Y", "agence": "EMP", "libelle": "MERLO.TELESCOPIQUE.3,5T", "immat": "", "commentaire": "CHARIOT TELESCOPIQUE HAUTEUR LEVAGE 6M - CAP 3000KG", "serie": "", "serie_grue": ""}, {"hme": "H07200L", "rzb": "H07200L", "agence": "EMP", "libelle": "FINISSEUR.VOLVO.MODELE.P4820D", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H07200P", "rzb": "H07200P", "agence": "EMP", "libelle": "MINI.FINISSEUR.CATERPILLAR.AP255E", "immat": "", "commentaire": "ACHAT OCCASION LE 28/11/2023  MES 2014", "serie": "", "serie_grue": ""}, {"hme": "H07300N", "rzb": "H07300N", "agence": "EMP", "libelle": "ROULEAU.BOMAG.BW174 ADAM HYBRID", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H07312T", "rzb": "H07312T", "agence": "EMP", "libelle": "COMPACTEUR.PNEUS.CATERPILLAR.PS300B.21,7T", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H07399U", "rzb": "H07399U", "agence": "EMP", "libelle": "ROULEAU.BOMAG.BW219DH3VM5-VM2.20T", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14300I", "rzb": "H14300I", "agence": "EMP", "libelle": "CONTAINER.8'(RENARD)", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14300J", "rzb": "H14300J", "agence": "EMP", "libelle": "CONTAINER.8'.DRY.NEUF.(TAVARES)", "immat": "", "commentaire": "MONTRABE", "serie": "", "serie_grue": ""}, {"hme": "H14301C", "rzb": "H14301C", "agence": "EMP", "libelle": "CONTAINER.8'.CHAKROUNE", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14301I", "rzb": "H14301I", "agence": "EMP", "libelle": "CONTAINER.8'.LIENARD MOURAD", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14301J", "rzb": "H14301J", "agence": "EMP", "libelle": "CONTAINER.8'.DRY.NEUF.(SAINT.SERNIN)", "immat": "", "commentaire": "MONTRABE", "serie": "", "serie_grue": ""}, {"hme": "H14301X", "rzb": "H14301X", "agence": "EMP", "libelle": "CONTAINER.8'..BELAILA", "immat": "", "commentaire": "ANCIEN CONTAINER DE BAYONNE - CHEZ EMP AU 01/10/2012", "serie": "", "serie_grue": ""}, {"hme": "H14302C", "rzb": "H14302C", "agence": "EMP", "libelle": "CONTAINER.8'.CHIBANE", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14302I", "rzb": "H14302I", "agence": "EMP", "libelle": "CONTAINER.8'.DELAURIES", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14302J", "rzb": "H14302J", "agence": "EMP", "libelle": "CONTAINER.8'.DRY.NEUF.(COMINGE)", "immat": "", "commentaire": "MONTRABE", "serie": "", "serie_grue": ""}, {"hme": "H14302Z", "rzb": "H14302Z", "agence": "EMP", "libelle": "CONTAINER.8'.(B.SOUIAH)", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14303I", "rzb": "H14303I", "agence": "EMP", "libelle": "CONTAINER.8'.AMIANTE (COMMINGE)", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14303J", "rzb": "H14303J", "agence": "EMP", "libelle": "CONTAINER.8'.DRY..BABOULENE", "immat": "", "commentaire": "MONTRABE", "serie": "", "serie_grue": ""}, {"hme": "H14303Z", "rzb": "H14303Z", "agence": "EMP", "libelle": "CONTAINER.8'.CAZARD", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14304I", "rzb": "H14304I", "agence": "EMP", "libelle": "CONTAINER.8'.CHIBANE", "immat": "", "commentaire": "Ch. BIGARD", "serie": "", "serie_grue": ""}, {"hme": "H14304Z", "rzb": "H14304Z", "agence": "EMP", "libelle": "CONTAINER.8'.(M.Domingues)", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14305Z", "rzb": "H14305Z", "agence": "EMP", "libelle": "CONTAINER.8'.(M.Alarcon)", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14306Z", "rzb": "H14306Z", "agence": "EMP", "libelle": "CONTAINER.8'.GUIBBERT", "immat": "", "commentaire": "NEFLA", "serie": "", "serie_grue": ""}, {"hme": "H14307Z", "rzb": "H14307Z", "agence": "EMP", "libelle": "CONTAINER.8'.(V.Domingues)", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14308Z", "rzb": "H14308Z", "agence": "EMP", "libelle": "CONTAINER.8'..GILLES DESCHAMPS", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14309Z", "rzb": "H14309Z", "agence": "EMP", "libelle": "CONTAINER.8'.BRAZEILLES", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14311C", "rzb": "H14311C", "agence": "EMP", "libelle": "CONTAINER.8'.(M.Salgado)", "immat": "", "commentaire": "Long 2438, largeur 2200, Ht 2260, poids 760Kg, Bleu", "serie": "", "serie_grue": ""}, {"hme": "H14312C", "rzb": "H14312C", "agence": "EMP", "libelle": "CONTAINER.8'.(M.Mora)", "immat": "", "commentaire": "Long 2438, largeur 2200, Ht 2260, poids 760Kg, Bleu", "serie": "", "serie_grue": ""}, {"hme": "H14313C", "rzb": "H14313C", "agence": "EMP", "libelle": "CONTAINER.8'.(GRILO.Roméo)", "immat": "", "commentaire": "Long 2438, largeur 2200, Ht 2260, poids 760Kg, Bleu", "serie": "", "serie_grue": ""}, {"hme": "H14314C", "rzb": "H14314C", "agence": "EMP", "libelle": "CONTAINER.8'. TAVARES  ( ancien CAILLABA)", "immat": "", "commentaire": "Long 2438, largeur 2200, Ht 2260, poids 760Kg, Bleu", "serie": "", "serie_grue": ""}, {"hme": "H14501J", "rzb": "H14501J", "agence": "EMP", "libelle": "VRS.ROULOTTE.DE.CHANTIER YOUSFI MOHAMMED(LOXAM.301151)", "immat": "ET-164-AC", "commentaire": "COULONGEAT", "serie": "", "serie_grue": ""}, {"hme": "H14501Q", "rzb": "H14501Q", "agence": "EMP", "libelle": "ROULOTTE.4 PERSONNES SOUIAH (contrat n° 595173)", "immat": "GV-193-HR", "commentaire": "CONTRAT LOXAM 48 MOIS", "serie": "", "serie_grue": ""}, {"hme": "H14502J", "rzb": "H14502J", "agence": "EMP", "libelle": "MODULE.DE.CHANTIER.SUR.BERCE. BABOULENE (ancien Comminge)24/05/2018", "immat": "", "commentaire": "MONTRABE", "serie": "", "serie_grue": ""}, {"hme": "H14502Q", "rzb": "H14502Q", "agence": "EMP", "libelle": "ROULOTTE.4 PERSONNES.CAZARD (contrat n°595170)", "immat": "GV-647-FA", "commentaire": "CONTRAT LOXAM 48 MOIS", "serie": "", "serie_grue": ""}, {"hme": "H14503K", "rzb": "H14503K", "agence": "EMP", "libelle": "ROULOTTE.DE.CHANTIER.VRS.4.PLACES.CHAKROUN MEDHI", "immat": "FL-901-WS", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14503Q", "rzb": "H14503Q", "agence": "EMP", "libelle": "ROULOTTE.4 PERSONNES.ST SERNIN (contrat n°595175)", "immat": "GV-254-HR", "commentaire": "CONTART LOXAM 48 MOIS", "serie": "", "serie_grue": ""}, {"hme": "H14504K", "rzb": "H14504K", "agence": "EMP", "libelle": "ROULOTTE.DE.CHANTIER.VRS.6.PLACES.SALGADO", "immat": "FL-099-WT", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14504Q", "rzb": "H14504Q", "agence": "EMP", "libelle": "ROULOTTE.4 PERSONNES.RENARD (contrat n°595171)", "immat": "GV-616-FA", "commentaire": "CONTART LOXAM 48 MOIS", "serie": "", "serie_grue": ""}, {"hme": "H14505I", "rzb": "H14505I", "agence": "EMP", "libelle": "VRS.ROULOTTE.DE.CHANTIER(LOXAM296905).MAYOR", "immat": "ER-521-FN", "commentaire": "MAYOR", "serie": "", "serie_grue": ""}, {"hme": "H14505K", "rzb": "H14505K", "agence": "EMP", "libelle": "ROULOTTE.DE.CHANTIER.VRS.6.PLACES.LIENARD", "immat": "FL-047-WT", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14505Q", "rzb": "H14505Q", "agence": "EMP", "libelle": "ROULOTTE.4 PERSONNES.GRILO (contrat n°595174)", "immat": "GV-231-HR", "commentaire": "CONTRAT LOXAM 48 MOIS", "serie": "", "serie_grue": ""}, {"hme": "H14506H", "rzb": "H14506H", "agence": "EMP", "libelle": "MOBILE.ENTREPRISE GILLES DESCHAMPS", "immat": "EG-557-AN", "commentaire": "V. DOMINGUES", "serie": "", "serie_grue": ""}, {"hme": "H14506K", "rzb": "H14506K", "agence": "EMP", "libelle": "ROULOTTE.DE.CHANTIER.VRS.6.PLACES.DOMMINGUES", "immat": "FL-994-WS", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14506Q", "rzb": "H14506Q", "agence": "EMP", "libelle": "ROULOTTE.4 PERSONNES.BRAZEILLES (contrat n°595172)", "immat": "GV-674-FA", "commentaire": "CONTRAT LOXAM 48MOIS", "serie": "", "serie_grue": ""}, {"hme": "H14507Q", "rzb": "H14507Q", "agence": "EMP", "libelle": "ROULOTTE.4 PERSONNES.TAVARES (contrat n°595177)", "immat": "GV-040-ND", "commentaire": "CONTRAT LOXAM 48MOIS", "serie": "", "serie_grue": ""}, {"hme": "H14508Q", "rzb": "H14508Q", "agence": "EMP", "libelle": "ROULOTTE.4 PERSONNES.COMMINGE (contrat n°595178)", "immat": "GV-066-ND", "commentaire": "CONTRAT LOXAM 48MOIS", "serie": "", "serie_grue": ""}, {"hme": "H14509H", "rzb": "H14509H", "agence": "EMP", "libelle": "VRS.ROULOTTE.DE.CHANTIER.(loxam 541725).COMMINGES", "immat": "EG-390-EG", "commentaire": "COMMINGES", "serie": "", "serie_grue": ""}, {"hme": "H14509Q", "rzb": "H14509Q", "agence": "EMP", "libelle": "ROULOTTE.4 PERSONNES.ALARCON (contrat n°595179)", "immat": "GV-094-ND", "commentaire": "CONTRAT LOXAM 48 MOIS", "serie": "", "serie_grue": ""}, {"hme": "H14510Q", "rzb": "H14510Q", "agence": "EMP", "libelle": "ROULOTTE.4 PERSONNES.OLIVIER GUIBBERT (contrat n°595176)", "immat": "GV-277-HR", "commentaire": "CONTRAT LOXAM 48MOIS", "serie": "", "serie_grue": ""}, {"hme": "H19002Z", "rzb": "H19002Z", "agence": "EMP", "libelle": "BLINDAGE.KRINGS", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19003Y", "rzb": "H19003Y", "agence": "EMP", "libelle": "BLINDAGES.JK300", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19005Y", "rzb": "H19005Y", "agence": "EMP", "libelle": "BLINDAGES.KS100", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19006Y", "rzb": "H19006Y", "agence": "EMP", "libelle": "BLINDAGES.S300P", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19007F", "rzb": "H19007F", "agence": "EMP", "libelle": "CAISSONS.KRINGS", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19007Y", "rzb": "H19007Y", "agence": "EMP", "libelle": "BLINDAGES.JK250", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19008Y", "rzb": "H19008Y", "agence": "EMP", "libelle": "BLINDAGES.JK100", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H01204X", "rzb": "H01204X", "agence": "ESA", "libelle": "CONTENEUR.DISTRIBUTEUR.GAZOLE", "immat": "", "commentaire": "BAYONNE GO", "serie": "", "serie_grue": ""}, {"hme": "H01205Z", "rzb": "H01205Z", "agence": "ESA", "libelle": "CONTENEUR.DISTRIBUTEUR.FOD", "immat": "", "commentaire": "BAYONNE FOD", "serie": "", "serie_grue": ""}, {"hme": "H04000J", "rzb": "P106I", "agence": "ESA", "libelle": "PELLE MECALAC 15 MWR", "immat": "", "commentaire": "RAS", "serie": "SERIE 82091", "serie_grue": ""}, {"hme": "H04001H", "rzb": "P001G", "agence": "ESA", "libelle": "MINIPELLE VOLVO ECR50D", "immat": "", "commentaire": "RAS", "serie": "SERIE VCECR50DT0 0 0 05507", "serie_grue": ""}, {"hme": "h04001I", "rzb": "h04001I", "agence": "ESA", "libelle": "PELLE.A.PNEUS.VOLVO.EW160.16T", "immat": "", "commentaire": "RAS", "serie": "serie VCEW160EH00321052", "serie_grue": ""}, {"hme": "H04001J", "rzb": "H04001J", "agence": "ESA", "libelle": "MINI-PELLE.BOBCAT.E85.8T", "immat": "", "commentaire": "RAS", "serie": "SERIE b34s 14129", "serie_grue": ""}, {"hme": "H04002G", "rzb": "H04002G", "agence": "ESA", "libelle": "PELLE.A.PNEUS.MECALAC.TYPE.12MTX.12T", "immat": "", "commentaire": "RAS", "serie": "SERIE MEC12MTXEF0045043 n°moteur serie 11682613", "serie_grue": ""}, {"hme": "H04002H", "rzb": "H04002H", "agence": "ESA", "libelle": "MINI-PELLE.CAT.TYPE302.7DCR.2,5T", "immat": "", "commentaire": "MINI PELLE FORAGE", "serie": "SERIE L JL03386", "serie_grue": ""}, {"hme": "H04002I", "rzb": "P103H", "agence": "ESA", "libelle": "PELLE S/PNEUX CATERPILLAR M315", "immat": "", "commentaire": "RAS", "serie": "SERIE M315FA   F4D00319", "serie_grue": ""}, {"hme": "H04004H", "rzb": "P004G", "agence": "ESA", "libelle": "MINI PELLE CATERPILLAR", "immat": "", "commentaire": "RAS", "serie": "SERIE L J L03263", "serie_grue": ""}, {"hme": "H04400I", "rzb": "C219H", "agence": "ESA", "libelle": "CHARGEUSE TEREX", "immat": "", "commentaire": "RAS", "serie": "SERIE TL08041098", "serie_grue": ""}, {"hme": "H05000N", "rzb": "H05000N", "agence": "ESA", "libelle": "PEUGEOT 308 SW / 2021 / 5P / BREAK BLUEHDI 130 ALLURE001029/07/2022", "immat": "GH-669-DF", "commentaire": "HUAU YANN", "serie": "", "serie_grue": ""}, {"hme": "H05001M", "rzb": "H05001M", "agence": "ESA", "libelle": "PEUGEOT.PEUGEOT.2008.Hdi.110.ACTIVE.BUSINESS", "immat": "FW-396-RT", "commentaire": "LEFEVRE Romain", "serie": "", "serie_grue": ""}, {"hme": "H05003N", "rzb": "H05003N", "agence": "ESA", "libelle": "PEUGEOT 308 SW / 2021 / 5P / BREAK BLUEHDI 130 ACTIVE001007/09/2022", "immat": "GH-177-JV", "commentaire": "LATAILLADE EVANN", "serie": "", "serie_grue": ""}, {"hme": "H05008N", "rzb": "H05008N", "agence": "ESA", "libelle": "PEUGEOT 308 SW Hdi 130 ALLURE PACK BVM6", "immat": "GF-911-VW", "commentaire": "DUBOS VINCENT", "serie": "", "serie_grue": ""}, {"hme": "H05008R", "rzb": "H05008R", "agence": "ESA", "libelle": "SKODA ELROQ 60 Element", "immat": "HG-765-QD", "commentaire": "LEFEVRE Romain", "serie": "", "serie_grue": ""}, {"hme": "h05009R", "rzb": "h05009R", "agence": "ESA", "libelle": "SKODA ELROQ 85 CLEVER", "immat": "HG-127-GJ", "commentaire": "HUAU YANN", "serie": "", "serie_grue": ""}, {"hme": "H05108M", "rzb": "LVU045", "agence": "ESA", "libelle": "BENYOUCEF Nadir", "immat": "FY-432-RD", "commentaire": "BENYOUCEF Nadir", "serie": "", "serie_grue": ""}, {"hme": "H05113P", "rzb": "LVU097", "agence": "ESA", "libelle": "ZAMBON", "immat": "GX-032-XJ", "commentaire": "ZAMBON", "serie": "", "serie_grue": ""}, {"hme": "H05115P", "rzb": "LVU031", "agence": "ESA", "libelle": "GONCALVES Sergio", "immat": "GV-741-JJ", "commentaire": "SERGIO GONCALVES", "serie": "", "serie_grue": ""}, {"hme": "H05126N", "rzb": "LVU073", "agence": "ESA", "libelle": "DOYARCABAL Julien", "immat": "GN-287-NL", "commentaire": "DOYARCABAL JULIEN", "serie": "", "serie_grue": ""}, {"hme": "H05136P", "rzb": "LVU096", "agence": "ESA", "libelle": "PINTO Mickael", "immat": "GY-266-DW", "commentaire": "PINTO MICKAEL", "serie": "", "serie_grue": ""}, {"hme": "H05154H", "rzb": "VU13G", "agence": "ESA", "libelle": "FOURGON BENNE RENAULT", "immat": "EH-830-CM", "commentaire": "RAS", "serie": "VF6VG000556476842", "serie_grue": ""}, {"hme": "H05200Q", "rzb": "VT09O", "agence": "ESA", "libelle": "TRACTEUR ROUTIER", "immat": "GV-923-VG", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05208W", "rzb": "RG01A", "agence": "ESA", "libelle": "CAMION PATA", "immat": "FD-764-HH", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05241L", "rzb": "V617K", "agence": "ESA", "libelle": "CAMION.6X4.POLYBENNE.MAN", "immat": "FS-628-SN", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05242M", "rzb": "V810L", "agence": "ESA", "libelle": "CAMION 8X4 MAN BI BENNE", "immat": "GE-339-GA", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05271M", "rzb": "VU78L", "agence": "ESA", "libelle": "FOURGON ENROBE IVECO", "immat": "FZ-328-GC", "commentaire": "PAREDON PATRICE", "serie": "0", "serie_grue": ""}, {"hme": "H05271P", "rzb": "VV01I", "agence": "ESA", "libelle": "FOURGON ENROBES REFECTOIRE", "immat": "ET-793-MK", "commentaire": "ACHAT D'OCCASION en 02/2023", "serie": "VF6VG000858608321", "serie_grue": ""}, {"hme": "H05274K", "rzb": "VU71J", "agence": "ESA", "libelle": "OPEL MOVANO CHASSIS CABINE", "immat": "FH-942-RJ", "commentaire": "RAS", "serie": "W0VVST608KB176462", "serie_grue": ""}, {"hme": "H05275K", "rzb": "VU72J", "agence": "ESA", "libelle": "OPEL MOVANO CHASSIS CABINE", "immat": "FH-735-RY", "commentaire": "RAS", "serie": "WOVVST608KB176445", "serie_grue": ""}, {"hme": "H05301X", "rzb": "VR95A", "agence": "ESA", "libelle": "SEMI BENNE KAISER 6879 YG 64", "immat": "AM-740-ZR", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05332U", "rzb": "VR85A", "agence": "ESA", "libelle": "REMORQUE PORTE ENGIN", "immat": "BH-325-WY", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H07200I", "rzb": "EE26H", "agence": "ESA", "libelle": "FINISSEUR CATERPILLAR", "immat": "", "commentaire": "RAS", "serie": "serie d8a00363", "serie_grue": ""}, {"hme": "h07201a", "rzb": "h07201a", "agence": "ESA", "libelle": "FINISSEUR.ABG6820", "immat": "", "commentaire": "RAS", "serie": "SERIE VCEP6820C00022996", "serie_grue": ""}, {"hme": "H07300H", "rzb": "RD08G", "agence": "ESA", "libelle": "PLAQUE VIBRANTE DPU80 R LEM", "immat": "", "commentaire": "largeur 670mm 740kg", "serie": "", "serie_grue": ""}, {"hme": "H07300J", "rzb": "5RV18I", "agence": "ESA", "libelle": "ROULEAU BOMAG BW100", "immat": "", "commentaire": "RAS", "serie": "serie 101462032214", "serie_grue": ""}, {"hme": "H14502H", "rzb": "HV55G", "agence": "ESA", "libelle": "MINIBASE 380 VRS", "immat": "EB-234-DG", "commentaire": "MINIBASE 380 VRS BAYONNE", "serie": "VF92E21CC39EB881047", "serie_grue": ""}, {"hme": "H14507H", "rzb": "HV57G", "agence": "ESA", "libelle": "MINIBASE 380 VRS", "immat": "EH-339-YX", "commentaire": "MINIBASE 380 VRS BAYONNE", "serie": "VF921MN160F160040", "serie_grue": ""}, {"hme": "H14508H", "rzb": "HV58G", "agence": "ESA", "libelle": "MINIBASE 380 VRS", "immat": "EH-359-YX", "commentaire": "MINIBASE 380 VRS BAYONNE", "serie": "VF924MN160F160041", "serie_grue": ""}, {"hme": "H15301W", "rzb": "H15301W", "agence": "ESA", "libelle": "LASER.CANALISATION.LEICA.6770", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H15302Y", "rzb": "H15302Y", "agence": "ESA", "libelle": "LASER.CANALISATION", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H15303Y", "rzb": "H15303Y", "agence": "ESA", "libelle": "LASER.CANALISATION", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19203H", "rzb": "H19203H", "agence": "ESA", "libelle": "REMORQUE.PORTE.ENGIN<3,5T.SATELLITE", "immat": "EY-669-BE", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05400I", "rzb": "H05400I", "agence": "MPG", "libelle": "BENNE.CALORIFUGEE.ATC.TYPE.AWB68", "immat": "", "commentaire": "CONTENER THERMIQUE POUR ENROBE", "serie": "", "serie_grue": ""}, {"hme": "H07603F", "rzb": "MB01A", "agence": "MPG", "libelle": "SURFACE.FINISSEUR.BETON.CMI450", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H10008Q", "rzb": "H10008Q", "agence": "MPG", "libelle": "GROUPE.ELECTROGENE.14KVA.DEBAT", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19206U", "rzb": "H19206U", "agence": "MPG", "libelle": "REMORQUE.PORTE.TOURET", "immat": "1406RF33", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05002L", "rzb": "H05002L", "agence": "MFGX", "libelle": "PEUGEOT.5008.BLUEHdi130.ACTIVE.BUSINESS.BVM6", "immat": "FP-914-AS", "commentaire": "Serge Buys", "serie": "", "serie_grue": ""}, {"hme": "H05006Q", "rzb": "H05006Q", "agence": "MFGX", "libelle": "GOLF 1,0 ETSI OPF 110 DSG7 MATCH", "immat": "GW-029-PF", "commentaire": "BARBIER CORALIE", "serie": "", "serie_grue": ""}, {"hme": "H05006R", "rzb": "H05006R", "agence": "MFGX", "libelle": "SKODA ENYAQ 5P 85 - Buys", "immat": "HF-028-DR", "commentaire": "Serge Buys", "serie": "", "serie_grue": ""}, {"hme": "H05007P", "rzb": "H05007P", "agence": "MFGX", "libelle": "OPEL GRANDLAND 1,5 DIESEL 130 DESIGN & TECH AUTO", "immat": "GQ-048-KT", "commentaire": "ISTASSE Sébastien", "serie": "", "serie_grue": ""}, {"hme": "H05012Q", "rzb": "H05012Q", "agence": "MFGX", "libelle": "VOLKSWAGEN ID4 77 KWH PRO 286 LIFE MAX", "immat": "HA-232-QY", "commentaire": "PASCAL CLERC", "serie": "", "serie_grue": ""}, {"hme": "H05015N", "rzb": "H05015N", "agence": "MFGX", "libelle": "PEUGEOT 5008 BLUE Hdi 130 BVM6 ACTIVE PACK + PACK NAVIGAT04/04/2022", "immat": "GE-215-QA", "commentaire": "LAFRECHINE Valérie", "serie": "", "serie_grue": ""}, {"hme": "H05018N", "rzb": "H05018N", "agence": "MFGX", "libelle": "PEUGEOT 308 Berline ALLURE PACK BLUE HDI 130 S&S", "immat": "GJ-985-SR", "commentaire": "BELHAIMER Mustapha", "serie": "", "serie_grue": ""}, {"hme": "H05019N", "rzb": "H05019N", "agence": "MFGX", "libelle": "DS7 CROSSBACK HYBRID E-TENSE 4X4 300 PERFORMANCE LINE001012/10/2022", "immat": "GJ-815-PW", "commentaire": "MARIDET Pascal", "serie": "", "serie_grue": ""}, {"hme": "H01201X", "rzb": "H01201X", "agence": "HME", "libelle": "CONTENEUR.DISTRIBUTEUR.GAZOLE", "immat": "", "commentaire": "MERIGNAC 1", "serie": "", "serie_grue": ""}, {"hme": "H03016R", "rzb": "H03016R", "agence": "HME", "libelle": "COMPRESSEUR.KAESER.SM8", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05016Q", "rzb": "H05016Q", "agence": "HME", "libelle": "RENAULT AUSTRAL EVOLUTION E-TECH FULL HYBRID 200", "immat": "GZ-814-MV", "commentaire": "LAFONT LAURENT", "serie": "", "serie_grue": ""}, {"hme": "H05111e", "rzb": "H05111e", "agence": "HME", "libelle": "MASTER.GD.CFT.L2H2.3t5.125cv", "immat": "DA-513-XJ", "commentaire": "DUPEYRON David", "serie": "VF1MAFESC50070935", "serie_grue": ""}, {"hme": "H05151F", "rzb": "H05151F", "agence": "HME", "libelle": "FOURGON.BENNE.SIMPLE.CABINE.COFFRE.Fourgon de prêt", "immat": "DG-772-DF", "commentaire": "FOURGON DE PRET", "serie": "VF6VG76J449603891", "serie_grue": ""}, {"hme": "H05270N", "rzb": "H05270N", "agence": "HME", "libelle": "FOURGON MAN", "immat": "GH-253-FR", "commentaire": "SERDA JULIAN", "serie": "WMA03VUY9N9018667", "serie_grue": ""}, {"hme": "H06702L", "rzb": "H06702L", "agence": "HME", "libelle": "CHARIOT.TOYOTA.3T", "immat": "", "commentaire": "RAS", "serie": "SERIE 026 FDF /  30E10112", "serie_grue": ""}, {"hme": "H10010S", "rzb": "H10010S", "agence": "HME", "libelle": "GROUPE.SOUDURE.BAIER", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14305B", "rzb": "H14305B", "agence": "HME", "libelle": "CONTAINER.10'", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14315C", "rzb": "H14315C", "agence": "HME", "libelle": "CONTAINER.8'", "immat": "", "commentaire": "Long 2438, largeur 2200, Ht 2260, poids 760Kg, Bleu", "serie": "", "serie_grue": ""}, {"hme": "H14332A", "rzb": "H14332A", "agence": "HME", "libelle": "CONTAINER.15M2.P.CLERC", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H14507J", "rzb": "H14507J", "agence": "HME", "libelle": "BUNGALOW.RABOTIN.15M2.REFECTOIRE", "immat": "", "commentaire": "REFECTOIRE PERSONNEL MERIGNAC AV M.LEVY", "serie": "", "serie_grue": ""}, {"hme": "HTESTSEB", "rzb": "HTESTSEB", "agence": "HME", "libelle": "H MAT TEST SEB", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H05002P", "rzb": "H05002P", "agence": "SSTC", "libelle": "PEUGEOT 308 SW ALLURE PAC BLEUHDI 130 S/S EAT8 PAUVIF001024/10/2023", "immat": "GR-389-VM", "commentaire": "JEROME PAUVIF", "serie": "", "serie_grue": ""}, {"hme": "H05024Q", "rzb": "H05024Q", "agence": "SSTC", "libelle": "RENAULT CAPTUR LABUZAN  evolution E-Tech full hybrid 145 VP - bva 6-145CH-5cv", "immat": "HA-093-EB", "commentaire": "LABUZAN THOMAS", "serie": "", "serie_grue": ""}, {"hme": "H05150Z", "rzb": "H05150Z", "agence": "SSTC", "libelle": "ROBOT.MULTIFONCTIONS.BAYONNE", "immat": "", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H18600Q", "rzb": "H18600Q", "agence": "SSTC", "libelle": "REMORQUE.REHABILITATION.REGARDS", "immat": "GT-863-CP", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H18602B", "rzb": "H18602B", "agence": "SSTC", "libelle": "MACHINE.A.PROJETER.LANCY.DEBAT", "immat": "AT-106-EE", "commentaire": "M. DEBAT", "serie": "", "serie_grue": ""}, {"hme": "H18603R", "rzb": "H18603R", "agence": "SSTC", "libelle": "REHABILITATION.REGARDS.DEBAT", "immat": "FG-020-DA", "commentaire": "RAS", "serie": "", "serie_grue": ""}, {"hme": "H19401Z", "rzb": "H19401Z", "agence": "SSTC", "libelle": "FORAGE DIRIGE", "immat": "", "commentaire": "CYRIES", "serie": "SERIE DRI 08250145", "serie_grue": ""}];
+const LS_KEY = 'parc_overrides_v1';
+const LS_NEW_KEY = 'parc_new_vehicles_v1';
+
+function getOverrides() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); }
+  catch { return {}; }
+}
+function getNewVehicles() {
+  try { return JSON.parse(localStorage.getItem(LS_NEW_KEY) || '[]'); }
+  catch { return []; }
+}
+function saveOverride(hme, patch) {
+  const ov = getOverrides();
+  ov[hme.toUpperCase()] = Object.assign(ov[hme.toUpperCase()] || {}, patch);
+  localStorage.setItem(LS_KEY, JSON.stringify(ov));
+}
+function getMergedData() {
+  const ov = getOverrides();
+  const base = BASE_DATA.map(r => {
+    const key = r.hme.toUpperCase();
+    return ov[key] ? Object.assign({}, r, ov[key]) : r;
+  });
+  const newVehs = getNewVehicles();
+  return base.concat(newVehs);
+}
+
+function normText(s) { return (s || '').trim().toUpperCase(); }
+function normImmat(s) { return normText(s).replace(/[^A-Z0-9]/g,''); }
+
+function searchData(query, data) {
+  const q = normText(query);
+  if (!q) return [];
+  const tokens = q.split(/\s+/).filter(Boolean);
+  return data.filter(r => {
+    return tokens.every(tok => {
+      const ti = normImmat(tok);
+      return normText(r.hme).includes(tok)
+        || normText(r.rzb).includes(tok)
+        || normText(r.immat).includes(tok)
+        || normText(r.agence).includes(tok)
+        || normText(r.libelle).includes(tok)
+        || normText(r.commentaire).includes(tok)
+        || (ti && normImmat(r.immat).includes(ti));
+    });
+  });
+}
+
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function detectMatchField(query, row) {
+  const q = normText(query);
+  if (normText(row.hme).includes(q)) return 'hme';
+  if (normText(row.rzb).includes(q)) return 'rzb';
+  return 'hme';
+}
+
+function renderCard(row, query) {
+  const match = detectMatchField(query, row);
+  const bigCode = escHtml(match === 'hme' ? row.rzb : row.hme);
+  const bigTag  = match === 'hme' ? '→ N° PARC RZB' : '→ N° PARC HME';
+  const ov = getOverrides()[row.hme.toUpperCase()];
+  const isNew = row._isNew;
+  const badge = ov ? '<span class="badge-edit">modifié</span>' : (isNew ? '<span class="new-veh-badge">nouveau</span>' : '');
+  const immatHtml = row.immat
+    ? '<div class="result-row"><span class="result-label">Immatriculation</span><span class="result-value mono">'+escHtml(row.immat)+'</span></div>'
+    : '';
+  const comHtml = row.commentaire
+    ? '<div class="result-comment">💬 '+escHtml(row.commentaire)+'</div>'
+    : '';
+  return '<div class="result-card">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'
+    +'<div><div class="result-tag">'+bigTag+'</div>'
+    +'<div class="result-big">'+(bigCode||'—')+'</div></div>'
+    +(row.agence ? '<div class="card-agence-badge">'+escHtml(row.agence)+'</div>' : '')
+    +'</div>'
+    +'<div class="result-row"><span class="result-label">HME</span><span class="result-value mono">'+escHtml(row.hme)+'</span></div>'
+    +'<div class="result-row"><span class="result-label">RZB</span><span class="result-value mono">'+escHtml(row.rzb)+'</span></div>'
+    +immatHtml
+    +'<div class="result-row"><span class="result-label">Libellé</span><span class="result-value">'+escHtml(row.libelle)+' '+badge+'</span></div>'
+    +comHtml
+    +'<div style="margin-top:1.2rem"><button class="btn btn-outline" onclick="openEdit(\''+escHtml(row.hme)+'\')">✏ Modifier</button></div>'
+    +'</div>';
+}
+
+function renderSerie(row) {
+  if (!row.serie && !row.serie_grue) {
+    return '<div class="serie-card"><div class="serie-title">Numéros de série</div><div class="serie-empty">Aucun enregistré</div></div>';
+  }
+  const s1 = row.serie ? '<div class="serie-block"><div class="serie-block-label">N° Série</div><div class="serie-block-value">'+escHtml(row.serie)+'</div></div>' : '';
+  const div = (row.serie && row.serie_grue) ? '<div class="serie-divider"></div>' : '';
+  const s2 = row.serie_grue ? '<div class="serie-block"><div class="serie-block-label">N° Série Grue</div><div class="serie-block-value">'+escHtml(row.serie_grue)+'</div></div>' : '';
+  return '<div class="serie-card"><div class="serie-title">Numéros de série</div>'+s1+div+s2+'</div>';
+}
+
+// ── SEARCH TAB ──────────────────────────────────────────────────
+var lastQuery = '';
+var lastResults = [];
+var selectedIdx = null;
+
+function doSearch() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) return;
+  lastQuery = q;
+  document.getElementById('search-input').value = '';
+  lastResults = searchData(q, getMergedData());
+  selectedIdx = null;
+  renderSearchResults();
+}
+
+function renderSearchResults() {
+  const container = document.getElementById('search-results');
+  if (!lastResults.length) {
+    container.innerHTML = '<div class="no-result">Aucun résultat pour <em>« '+escHtml(lastQuery)+' »</em></div>';
+    return;
+  }
+  if (lastResults.length === 1) {
+    selectedIdx = 0;
+    container.innerHTML = '<div class="result-grid"><div>'+renderCard(lastResults[0], lastQuery)+'</div><div>'+renderSerie(lastResults[0])+'</div></div>';
+    return;
+  }
+  var tableRows = lastResults.map(function(r,i) {
+    return '<tr class="'+(selectedIdx===i?'selected':'')+'" onclick="selectRow('+i+')">'
+      +'<td>'+escHtml(r.agence)+'</td>'
+      +'<td>'+escHtml(r.hme)+'</td>'
+      +'<td>'+escHtml(r.rzb)+'</td>'
+      +'<td>'+escHtml(r.immat)+'</td>'
+      +'<td>'+escHtml(r.libelle.substring(0,40))+'</td>'
+      +'</tr>';
+  }).join('');
+
+  var detail = '';
+  if (selectedIdx !== null) {
+    detail = '<div class="result-grid" style="margin-top:1rem"><div>'+renderCard(lastResults[selectedIdx], lastQuery)+'</div><div>'+renderSerie(lastResults[selectedIdx])+'</div></div>';
+  }
+
+  container.innerHTML = '<div class="section-label">'+lastResults.length+' résultat(s) — cliquez une ligne</div>'
+    +'<div class="table-wrap"><table>'
+    +'<thead><tr><th>Agence</th><th>HME</th><th>RZB</th><th>Immat</th><th>Libellé</th></tr></thead>'
+    +'<tbody>'+tableRows+'</tbody></table></div>'
+    +detail;
+}
+
+function selectRow(i) {
+  selectedIdx = i;
+  renderSearchResults();
+}
+
+// ── MULTI TAB ───────────────────────────────────────────────────
+var multiOut = [];
+
+function doMulti() {
+  const raw = document.getElementById('multi-input').value;
+  const items = Array.from(new Set(raw.split('\n').map(function(s){return s.trim();}).filter(Boolean)));
+  const data = getMergedData();
+  multiOut = [];
+  const notFound = [];
+  items.forEach(function(it) {
+    const res = searchData(it, data);
+    if (res.length) {
+      res.forEach(function(r) { multiOut.push(Object.assign({search: it}, r)); });
+    } else {
+      notFound.push(it);
+    }
+  });
+
+  const container = document.getElementById('multi-results');
+  if (!multiOut.length) {
+    container.innerHTML = '<div class="no-result">Aucun résultat pour la liste</div>';
+    return;
+  }
+
+  const nfHtml = notFound.length
+    ? '<div style="margin-top:.6rem"><span style="font-family:\'DM Mono\',monospace;font-size:.72rem;color:var(--muted)">NON TROUVÉES :</span><div class="not-found-list">'+notFound.map(function(x){return '<span class="nf-chip">'+escHtml(x)+'</span>';}).join('')+'</div></div>'
+    : '';
+
+  const rows = multiOut.map(function(r) {
+    return '<tr>'
+      +'<td>'+escHtml(r.search)+'</td>'
+      +'<td>'+escHtml(r.agence)+'</td>'
+      +'<td>'+escHtml(r.hme)+'</td>'
+      +'<td>'+escHtml(r.rzb)+'</td>'
+      +'<td>'+escHtml(r.immat)+'</td>'
+      +'<td>'+escHtml(r.libelle.substring(0,35))+'</td>'
+      +'</tr>';
+  }).join('');
+
+  const warnStat = notFound.length
+    ? '<div class="stat-sep">·</div><div class="stat"><div class="stat-val warn">'+notFound.length+'</div><div class="stat-lbl">Non trouvées</div></div>'
+    : '';
+
+  container.innerHTML = '<div class="stats-bar">'
+    +'<div class="stat"><div class="stat-val">'+items.length+'</div><div class="stat-lbl">Recherches</div></div>'
+    +'<div class="stat-sep">·</div>'
+    +'<div class="stat"><div class="stat-val">'+(items.length-notFound.length)+'</div><div class="stat-lbl">Trouvées</div></div>'
+    +'<div class="stat-sep">·</div>'
+    +'<div class="stat"><div class="stat-val">'+multiOut.length+'</div><div class="stat-lbl">Lignes</div></div>'
+    +warnStat+'</div>'
+    +nfHtml
+    +'<div class="table-wrap"><table>'
+    +'<thead><tr><th>Recherche</th><th>Agence</th><th>HME</th><th>RZB</th><th>Immat</th><th>Libellé</th></tr></thead>'
+    +'<tbody>'+rows+'</tbody></table></div>';
+}
+
+function exportMultiCSV() {
+  if (!multiOut.length) { showToast("Lancez d'abord une recherche"); return; }
+  const cols = ['search','agence','hme','rzb','immat','libelle','commentaire','serie','serie_grue'];
+  const header = ['Recherche','Agence','HME','RZB','Immat','Libellé','Commentaire','N°Série','N°SérieGrue'];
+  const rows = multiOut.map(function(r) {
+    return cols.map(function(c){ return '"'+((r[c]||'').replace(/"/g,'""'))+'"'; }).join(';');
+  });
+  const csv = [header.join(';')].concat(rows).join('\r\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'multi_resultats.csv';
+  a.click();
+}
+
+// ── EDIT ────────────────────────────────────────────────────────
+var editingHme = null;
+
+function openEdit(hme) {
+  const data = getMergedData();
+  const row = data.find(function(r){ return normText(r.hme) === normText(hme); });
+  if (!row) return;
+  editingHme = row.hme;
+  document.getElementById('edit-hme').value = row.hme;
+  document.getElementById('edit-rzb').value = row.rzb;
+  document.getElementById('edit-libelle').value = row.libelle;
+  document.getElementById('edit-immat').value = row.immat;
+  document.getElementById('edit-agence').value = row.agence;
+  document.getElementById('edit-comment').value = row.commentaire;
+  document.getElementById('edit-serie').value = row.serie;
+  document.getElementById('edit-serie-grue').value = row.serie_grue;
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+  editingHme = null;
+}
+
+function saveEdit() {
+  if (!editingHme) return;
+  const patch = {
+    libelle:     document.getElementById('edit-libelle').value,
+    immat:       document.getElementById('edit-immat').value,
+    agence:      document.getElementById('edit-agence').value,
+    commentaire: document.getElementById('edit-comment').value,
+    serie:       document.getElementById('edit-serie').value,
+    serie_grue:  document.getElementById('edit-serie-grue').value,
+  };
+  saveOverride(editingHme, patch);
+  closeModal();
+  showToast('✓ Modifications enregistrées');
+  if (lastQuery) { lastResults = searchData(lastQuery, getMergedData()); renderSearchResults(); }
+}
+
+// ── ADMIN — EXPORT FULL CSV ─────────────────────────────────────
+function exportFullCSV() {
+  const data = getMergedData();
+  const cols = ['hme','rzb','agence','libelle','immat','commentaire','serie','serie_grue'];
+  const header = ['N° PARC HME','N° PARC RZB','AGENCE','LIBELLE','IMMATRICULATION','COMMENTAIRE','N° SERIE','N° SERIE GRUE'];
+  const rows = data.map(function(r) {
+    return cols.map(function(c){ return '"'+((r[c]||'').replace(/"/g,'""'))+'"'; }).join(';');
+  });
+  const csv = [header.join(';')].concat(rows).join('\r\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'parc_export_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  showToast('✓ Export téléchargé', 60000);
+}
+
+// ── ADMIN — IMPORT CSV ──────────────────────────────────────────
+var importedRecords = null;
+
+function handleImportCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  document.getElementById('import-filename').textContent = file.name;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const text = e.target.result.replace(/^\uFEFF/,''); // strip BOM
+      const lines = text.split(/\r?\n/).filter(function(l){ return l.trim(); });
+      if (lines.length < 2) throw new Error('Fichier vide');
+
+      // Detect separator
+      const sep = lines[0].includes(';') ? ';' : ',';
+
+      function parseLine(line) {
+        var result = [], cur = '', inQ = false;
+        for (var i = 0; i < line.length; i++) {
+          var c = line[i];
+          if (c === '"') { inQ = !inQ; }
+          else if (c === sep && !inQ) { result.push(cur.trim()); cur = ''; }
+          else { cur += c; }
+        }
+        result.push(cur.trim());
+        return result;
+      }
+
+      const headers = parseLine(lines[0]).map(function(h){ return h.replace(/^"|"$/g,'').trim().toUpperCase(); });
+      const colMap = {
+        'N° PARC HME':'hme', 'N° DE PARC HME':'hme',
+        'N° PARC RZB':'rzb', 'N° PARC RZB':'rzb',
+        'AGENCE':'agence', 'LIBELLE':'libelle', 'LIBELLÉ':'libelle',
+        'IMMATRICULATION':'immat',
+        'COMMENTAIRE':'commentaire',
+        'N° SERIE':'serie', 'N° SÉRIE':'serie',
+        'N° SERIE GRUE':'serie_grue', 'N° SÉRIE GRUE':'serie_grue'
+      };
+
+      importedRecords = [];
+      for (var i = 1; i < lines.length; i++) {
+        var vals = parseLine(lines[i]);
+        var rec = {hme:'',rzb:'',agence:'',libelle:'',immat:'',commentaire:'',serie:'',serie_grue:''};
+        headers.forEach(function(h, idx) {
+          var key = colMap[h];
+          if (key && vals[idx] !== undefined) {
+            rec[key] = vals[idx].replace(/^"|"$/g,'').trim();
+          }
+        });
+        if (rec.hme) importedRecords.push(rec);
+      }
+
+      // Preview
+      const ov = getOverrides();
+      const modCount = Object.keys(ov).length;
+      document.getElementById('import-preview').innerHTML =
+        '<div class="import-preview-card">'
+        +'<div class="import-preview-title">Aperçu de l\'import</div>'
+        +'<div class="import-stat">Fiches dans le CSV : <span>'+importedRecords.length+'</span></div>'
+        +'<div class="import-stat">Modifications locales qui seront effacées : <span>'+(modCount||0)+'</span></div>'
+        +'<div style="margin-top:1rem;display:flex;gap:8px">'
+        +'<button class="btn" onclick="generateNewHTML()">⬇ Générer index.html à uploader</button>'
+        +'</div>'
+        +'<div style="margin-top:.8rem;font-family:\'DM Mono\',monospace;font-size:.75rem;color:var(--muted)">→ Dépose ce fichier sur GitHub pour que tout le monde voie les modifications</div>'
+        +'</div>';
+
+    } catch(err) {
+      document.getElementById('import-preview').innerHTML =
+        '<div style="color:#e05555;font-family:\'DM Mono\',monospace;font-size:.82rem;margin-top:.8rem">❌ Erreur : '+err.message+'</div>';
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function generateNewHTML() {
+  if (!importedRecords) return;
+
+  // Fusionner les nouveaux véhicules locaux avec les données importées
+  const newVehs = getNewVehicles().map(function(v) {
+    const copy = Object.assign({}, v);
+    delete copy._isNew;
+    return copy;
+  });
+  const allRecords = importedRecords.concat(newVehs);
+
+  // Get current HTML and replace BASE_DATA
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', window.location.href, false);
+  try { xhr.send(); } catch(e) {
+    // Fallback: rebuild from current page source
+  }
+
+  // Rebuild HTML by replacing the BASE_DATA in current page
+  var scripts = document.querySelectorAll('script');
+  var currentScript = '';
+  scripts.forEach(function(s){ if (s.textContent.includes('BASE_DATA')) currentScript = s.textContent; });
+
+  var newData = JSON.stringify(allRecords);
+  var newScript = currentScript.replace(
+    /const BASE_DATA = \[[\s\S]*?\];/,
+    'const BASE_DATA = ' + newData + ';'
+  );
+
+  // Force l'onglet Recherche avant de capturer le HTML
+  switchTab('search');
+
+  // Rebuild full HTML
+  var newHTML = document.documentElement.outerHTML.replace(currentScript, newScript);
+  // Remplace BASE_DATA une seconde fois par sécurité
+  newHTML = newHTML.replace(
+    /const BASE_DATA = \[[\s\S]*?\];/,
+    'const BASE_DATA = ' + newData + ';'
+  );
+
+  var blob = new Blob([newHTML], {type:'text/html;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'index.html';
+  a.click();
+  showToast('✓ index.html généré — uploade-le sur GitHub');
+}
+
+// ── ADMIN — CLEAR LOCALSTORAGE ──────────────────────────────────
+function clearLocalStorage() {
+  const count = Object.keys(getOverrides()).length;
+  const newCount = getNewVehicles().length;
+  if (count === 0 && newCount === 0) { showToast('Aucune modification locale à effacer'); return; }
+  if (!confirm('Effacer ' + count + ' modification(s) et ' + newCount + ' nouveau(x) véhicule(s) local(aux) ?')) return;
+  localStorage.removeItem(LS_KEY);
+  localStorage.removeItem(LS_NEW_KEY);
+  updateLSCount();
+  showToast('✓ Modifications locales effacées');
+  if (lastQuery) { lastResults = searchData(lastQuery, getMergedData()); renderSearchResults(); }
+}
+
+function updateLSCount() {
+  const count = Object.keys(getOverrides()).length;
+  const newCount = getNewVehicles().length;
+  const el = document.getElementById('ls-count');
+  const parts = [];
+  if (count > 0) parts.push(count + ' modification(s)');
+  if (newCount > 0) parts.push(newCount + ' nouveau(x) véhicule(s)');
+  if (el) el.textContent = parts.length ? parts.join(' · ') + ' en local' : 'Aucune modification locale';
+}
+
+// ── NOUVEAU VÉHICULE ────────────────────────────────────────────
+function openNewVehicule() {
+  // Remplir la datalist des agences
+  const agences = Array.from(new Set(getMergedData().map(r => r.agence).filter(Boolean))).sort();
+  const dl = document.getElementById('agences-list');
+  dl.innerHTML = agences.map(a => '<option value="'+escHtml(a)+'">').join('');
+
+  // Vider les champs
+  ['new-hme','new-rzb','new-libelle','new-immat','new-agence','new-comment','new-serie','new-serie-grue'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('new-hme-error').style.display = 'none';
+  document.getElementById('new-veh-modal').classList.add('open');
+  setTimeout(function(){ document.getElementById('new-hme').focus(); }, 100);
+}
+
+function closeNewVehicule() {
+  document.getElementById('new-veh-modal').classList.remove('open');
+}
+
+function saveNewVehicule() {
+  const hme = document.getElementById('new-hme').value.trim();
+  const libelle = document.getElementById('new-libelle').value.trim();
+  const agence = document.getElementById('new-agence').value.trim();
+
+  // Validation
+  const errEl = document.getElementById('new-hme-error');
+  if (!hme) {
+    errEl.textContent = '⚠ Le N° HME est obligatoire';
+    errEl.style.display = 'block';
+    document.getElementById('new-hme').focus();
+    return;
+  }
+  if (!libelle) {
+    showToast('⚠ Le libellé est obligatoire');
+    document.getElementById('new-libelle').focus();
+    return;
+  }
+  if (!agence) {
+    showToast('⚠ L\'agence est obligatoire');
+    document.getElementById('new-agence').focus();
+    return;
+  }
+
+  // Vérifier doublon HME
+  const allData = getMergedData();
+  const exists = allData.find(function(r){ return normText(r.hme) === normText(hme); });
+  if (exists) {
+    errEl.textContent = '⚠ Un engin avec ce N° HME existe déjà (' + exists.agence + ' · ' + exists.libelle.substring(0,30) + ')';
+    errEl.style.display = 'block';
+    document.getElementById('new-hme').focus();
+    return;
+  }
+  errEl.style.display = 'none';
+
+  const rzb = document.getElementById('new-rzb').value.trim() || hme;
+  const newVeh = {
+    hme: hme,
+    rzb: rzb,
+    agence: agence,
+    libelle: libelle,
+    immat: document.getElementById('new-immat').value.trim(),
+    commentaire: document.getElementById('new-comment').value.trim(),
+    serie: document.getElementById('new-serie').value.trim(),
+    serie_grue: document.getElementById('new-serie-grue').value.trim(),
+    _isNew: true
+  };
+
+  const news = getNewVehicles();
+  news.push(newVeh);
+  localStorage.setItem(LS_NEW_KEY, JSON.stringify(news));
+
+  closeNewVehicule();
+  updateLSCount();
+  showToast('✓ Fiche « ' + hme + ' » créée localement');
+
+  // Si on est dans une recherche active, rafraîchir
+  if (lastQuery) { lastResults = searchData(lastQuery, getMergedData()); renderSearchResults(); }
+
+  // Basculer vers la recherche et chercher directement la nouvelle fiche
+  switchTab('search');
+  document.getElementById('search-input').value = hme;
+  setTimeout(function(){
+    lastQuery = hme;
+    document.getElementById('search-input').value = '';
+    lastResults = searchData(hme, getMergedData());
+    selectedIdx = null;
+    renderSearchResults();
+  }, 150);
+}
+
+// ── TABS ────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(function(t,i){
+    t.classList.toggle('active', ['search','multi','admin'][i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('tab-'+name).classList.add('active');
+  if (name === 'admin') updateLSCount();
+}
+
+// ── TOAST ───────────────────────────────────────────────────────
+function showToast(msg, duration) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, duration || 2500);
+}
+
+// ── INIT ────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  const n = getMergedData().length;
+  const agences = new Set(getMergedData().map(function(r){ return r.agence; })).size;
+  document.getElementById('header-stats').textContent = n + ' engins · ' + agences + ' agences';
+  document.getElementById('edit-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+  document.getElementById('new-veh-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeNewVehicule();
+  });
+  switchTab('search');
+  window.scrollTo(0, 0);
+});
+
+</script>
+</body>
+</html>
